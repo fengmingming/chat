@@ -1,0 +1,17 @@
+server:
+  port: 9090
+
+spring:
+  application:
+    name: boluo-chat
+  redis:
+    redisson:
+      config: |
+        singleServerConfig:
+          address: redis://127.0.0.1:6314
+          password: 
+          database: 0
+  datasource:
+    url: jdbc:mysql://127.0.0.1:3306/chat?useSSL=false&serverTimezone=UTC+8
+    username: root
+    password:
