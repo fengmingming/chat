@@ -60,7 +60,7 @@ public class Tenant {
      * 状态
      * */
     @TableField(value = "state")
-    private Integer state = 0;
+    private Integer state;
     /**
      * 创建时间
      * */
