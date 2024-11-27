@@ -9,10 +9,10 @@ import org.springframework.messaging.rsocket.service.RSocketServiceProxyFactory;
 import org.springframework.stereotype.Component;
 
 @Component
-@Setter
 public class RSocketFactory {
 
-    private TimedCache<Address, MessageRequester> cache = new TimedCache<>(1000 * 60 * 10);
+    private final TimedCache<Address, MessageRequester> cache = new TimedCache<>(1000 * 60 * 10);
+    @Setter
     @Resource
     private RSocketRequester.Builder requestBuilder;
 
