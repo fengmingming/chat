@@ -22,7 +22,8 @@ public class MessageRest {
     public ResVo<?> createMessage(@PathVariable("tenantId") Long tenantId, @Valid @RequestBody Message message) {
         message.setTenantId(tenantId.toString());
         message.setTimestamp(System.currentTimeMillis());
-        message = messageService.recordAndSendMessage(message);
+        message = messageService.recordMessage(message);
+        messageService.sendMessage(message);
         return ResVo.success(message);
     }
 

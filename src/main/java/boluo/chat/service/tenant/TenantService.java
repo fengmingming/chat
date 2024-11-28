@@ -33,4 +33,19 @@ public class TenantService {
         return tenant;
     }
 
+    @Transactional
+    public void updateTenant(Long tenantId, @Valid UpdateTenantCommand command) {
+        Tenant tenant = tenantMapper.selectById(tenantId);
+        if(command.getTenantName() != null) {
+            tenant.setTenantName(command.getTenantName());
+        }
+        if(command.getPhone() != null) {
+            tenant.setPhone(command.getPhone());
+        }
+        if(command.getPassword() != null) {
+            tenant.setPassword(BCrypt.hashpw(command.getPassword(), BCrypt.gensalt()));
+        }
+        tenantMapper.updateById(tenant);
+    }
+
 }

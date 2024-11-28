@@ -12,11 +12,11 @@ spring:
           password: 
           database: 0
   datasource:
-    url: jdbc:mysql://127.0.0.1:3306/chat?useSSL=false&serverTimezone=UTC+8
+    url: jdbc:mysql://127.0.0.1:3306/chat?useSSL=true
     username: root
     password:
     driver-class-name: com.mysql.cj.jdbc.Driver
 
 boluo:
   chat:
-    im-address: 127.0.0.1:8080
+    im-address: 127.0.0.1:40486

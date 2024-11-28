@@ -11,6 +11,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.annotation.Resource;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 @Service
 public class MessageService {
@@ -27,7 +28,9 @@ public class MessageService {
     /**
      * 记录并发送消息
      * */
-    public Message recordAndSendMessage(Message message) {
+    @Transactional
+    public Message recordMessage(Message message) {
+        //保存
         MessageEntity me = new MessageEntity();
         me.setTenantId(Long.parseLong(message.getTenantId()));
         me.setFrom(message.getFrom());
@@ -40,11 +43,14 @@ public class MessageService {
         }
         messageMapper.insert(me);
         message.setMsgId(me.getMsgId().toString());
-        //保存
+        return message;
+    }
+
+    public void sendMessage(Message message) {
+        //发送
         Address address = addressFactory.findAddress();
         MessageRequester requester = rsocketFactory.getMessageRequester(address);
         requester.sendMessage(message).subscribe();
-        return message;
     }
 
 }

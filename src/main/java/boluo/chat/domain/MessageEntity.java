@@ -16,9 +16,9 @@ public class MessageEntity {
     private Long msgId;
     @TableField(value = "tenant_id")
     private Long tenantId;
-    @TableField(value = "from")
+    @TableField(value = "`from`")
     private String from;
-    @TableField(value = "to")
+    @TableField(value = "`to`")
     private String to;
     @TableField(value = "msg_type")
     private String msgType;
