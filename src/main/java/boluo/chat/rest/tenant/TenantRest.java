@@ -1,11 +1,16 @@
 package boluo.chat.rest.tenant;
 
 import boluo.chat.common.ResVo;
+import boluo.chat.service.tenant.TenantService;
+import jakarta.annotation.Resource;
 import jakarta.validation.Valid;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
 public class TenantRest {
+
+    @Resource
+    private TenantService tenantService;
 
     /**
      * 创建租户
@@ -13,6 +18,7 @@ public class TenantRest {
     @PostMapping("/Tenants")
     public ResVo<?> createTenant(@Valid @RequestBody CreateTenantReq req) {
 
+        tenantService.createTenant(req);
         return ResVo.success();
     }
 
