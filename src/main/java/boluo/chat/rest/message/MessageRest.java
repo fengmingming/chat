@@ -30,8 +30,8 @@ public class MessageRest {
     /**
      * 查询消息
      * */
-    @GetMapping("/Tenants/{tenantId}/Accounts/{accountId}/Messages")
-    public ResVo<?> findMessages(@PathVariable("tenantId") Long tenantId, @PathVariable("accountId") Long accountId, FindMessagesReq req) {
+    @GetMapping("/Tenants/{tenantId}/Accounts/{account}/Messages")
+    public ResVo<?> findMessages(@PathVariable("tenantId") Long tenantId, @PathVariable("account") String account, FindMessagesReq req) {
 
         return ResVo.success();
     }
@@ -40,7 +40,7 @@ public class MessageRest {
      * 查询群消息
      * */
     @GetMapping("/Tenants/{tenantId}/Groups/{groupId}/Messages")
-    public ResVo<?> findGroupMessages(@PathVariable("tenantId") Long tenantId, @PathVariable("groupId") Long groupId, FindGroupMessagesReq req) {
+    public ResVo<?> findGroupMessages(@PathVariable("tenantId") Long tenantId, @PathVariable("groupId") String groupId, FindGroupMessagesReq req) {
 
         return ResVo.success();
     }

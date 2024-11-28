@@ -16,7 +16,9 @@ import java.time.LocalDateTime;
 public class Group {
 
     @TableId(value = "groupId", type = IdType.ASSIGN_ID)
-    private Long groupId;
+    private Long id;
+    @TableField(value = "groupId")
+    private String groupId;
     @TableField(value = "tenant_id")
     private Long tenantId;
     @TableField(value = "group_name")

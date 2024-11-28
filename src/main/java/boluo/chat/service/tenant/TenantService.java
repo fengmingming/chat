@@ -45,6 +45,7 @@ public class TenantService {
         if(command.getPassword() != null) {
             tenant.setPassword(BCrypt.hashpw(command.getPassword(), BCrypt.gensalt()));
         }
+        tenant.setUpdateTime(LocalDateTime.now());
         tenantMapper.updateById(tenant);
     }
 

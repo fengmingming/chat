@@ -19,7 +19,7 @@ public class Tenant {
     /**
      * 租户id
      * */
-    @TableId(value = "tenant_id", type = IdType.AUTO)
+    @TableId(value = "tenant_id", type = IdType.ASSIGN_ID)
     private Long tenantId;
     /**
      * 租户名称

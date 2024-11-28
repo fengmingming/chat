@@ -1,8 +1,8 @@
 CREATE TABLE chat.`account` (
-  `id` BIGINT NOT NULL AUTO_INCREMENT,
+  `id` BIGINT NOT NULL,
   `tenant_id` BIGINT not null comment '租户id',
   `account` VARCHAR(100)  not null comment '账号',
-  `password` VARCHAR(255) null comment '密码',
+  `password` VARCHAR(20) null comment '密码',
   `nick_name` VARCHAR(100) null comment '昵称',
   `profile_picture` VARCHAR(255) null comment '头像',
   `create_time` DATETIME not null comment '创建时间',
@@ -12,7 +12,8 @@ CREATE TABLE chat.`account` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 comment='账号';
 
 CREATE TABLE chat.`group` (
-  `groupId` BIGINT NOT NULL AUTO_INCREMENT,
+  `id` BIGINT NOT NULL,
+  `groupId` VARCHAR(100) NOT NULL comment '组id',
   `tenant_id` BIGINT not null comment '租户id',
   `group_name` VARCHAR(100) not null comment '组名称',
   `state` INT not null comment '组状态',
@@ -24,7 +25,7 @@ CREATE TABLE chat.`group` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 comment='群组';
 
 CREATE TABLE chat.`group_member` (
-  `id` BIGINT NOT NULL AUTO_INCREMENT,
+  `id` BIGINT NOT NULL,
   `tenant_id` BIGINT not null comment '租户id',
   `group_id` BIGINT not null comment '群组id',
   `account_id` BIGINT not null comment '账号id',
@@ -36,7 +37,7 @@ CREATE TABLE chat.`group_member` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 comment '群组成员';
 
 CREATE TABLE chat.`message` (
-  `msg_id` BIGINT NOT NULL AUTO_INCREMENT comment '',
+  `msg_id` BIGINT NOT NULL comment '',
   `tenant_id` BIGINT not null comment '租户id',
   `from` VARCHAR(100) not null comment '消息来源账号',
   `to` VARCHAR(100) not null comment '消息接收账号',
@@ -47,7 +48,7 @@ CREATE TABLE chat.`message` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 comment='消息';
 
 CREATE TABLE chat.`relationship` (
-  `id` BIGINT NOT NULL AUTO_INCREMENT,
+  `id` BIGINT NOT NULL,
   `tenant_id` BIGINT not null comment '租户id',
   `account_id` BIGINT not null comment '账号id',
   `friend_id` BIGINT not null comment '友人账号id',
@@ -60,7 +61,7 @@ CREATE TABLE chat.`relationship` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 comment='好友关系表';
 
 CREATE TABLE chat.`tenant` (
-  `tenant_id` BIGINT NOT NULL AUTO_INCREMENT,
+  `tenant_id` BIGINT NOT NULL,
   `tenant_name` VARCHAR(100) not null comment '租户名称',
   `phone` VARCHAR(50) not null comment '联系方式' ,
   `password` VARCHAR(255) null comment '密码',

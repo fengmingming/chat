@@ -1,26 +1,46 @@
 package boluo.chat.rest.account;
 
+import boluo.chat.common.PageVo;
 import boluo.chat.common.ResVo;
+import boluo.chat.domain.Account;
+import boluo.chat.mapper.AccountMapper;
+import boluo.chat.service.account.AccountService;
+import cn.hutool.core.util.StrUtil;
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import jakarta.annotation.Resource;
+import jakarta.validation.Valid;
+import lombok.Setter;
 import org.springframework.web.bind.annotation.*;
 
+@Setter
 @RestController
 public class AccountRest {
+
+    @Resource
+    private AccountMapper accountMapper;
+    @Resource
+    private AccountService accountService;
 
     /**
      *  账户
      */
     @PostMapping("/Tenants/{tenantId}/Accounts")
-    public ResVo<?> createAccount(@PathVariable("tenantId") Long tenantId, @RequestBody CreateAccountReq req) {
-
-        return ResVo.success();
+    public ResVo<?> createAccount(@PathVariable("tenantId") Long tenantId, @Valid @RequestBody CreateAccountReq req) {
+        Account account = accountMapper.selectByAccount(tenantId, req.getAccount());
+        if(account != null) {
+            return ResVo.error("账号已存在");
+        }
+        account = accountService.createAccount(tenantId, req);
+        return ResVo.success(account);
     }
 
     /**
      * 修改账户
      * */
-    @PutMapping("/Tenants/{tenantId}/Accounts/{accountId}")
-    public ResVo<?> updateAccount(@PathVariable("tenantId") Long tenantId, @PathVariable("accountId") Long accountId, @RequestBody UpdateAccountReq req) {
-
+    @PutMapping("/Tenants/{tenantId}/Accounts/{account}")
+    public ResVo<?> updateAccount(@PathVariable("tenantId") Long tenantId, @PathVariable("account") String account, @Valid @RequestBody UpdateAccountReq req) {
+        accountService.updateAccount(tenantId, account, req);
         return ResVo.success();
     }
 
@@ -29,33 +49,35 @@ public class AccountRest {
      * */
     @GetMapping("/Tenants/{tenantId}/Accounts")
     public ResVo<?> findAccounts(@PathVariable("tenantId") Long tenantId, FindAccountsReq req) {
-
-        return ResVo.success();
+        LambdaQueryWrapper<Account> queryWrapper = new LambdaQueryWrapper<>();
+        queryWrapper.eq(Account::getTenantId, tenantId);
+        queryWrapper.like(StrUtil.isNotBlank(req.getNickName()), Account::getNickName, req.getNickName());
+        Page<Account> page = accountMapper.selectPage(new Page<>(req.getPageNum(), req.getPageSize()), queryWrapper);
+        return ResVo.success(new PageVo<>(page.getTotal(), page.getRecords()));
     }
 
     /**
      * 查询账户
      * */
-    @GetMapping("/Tenants/{tenantId}/Accounts/{accountId}")
-    public ResVo<?> findAccounts(@PathVariable("tenantId") Long tenantId, @PathVariable("accountId") Long accountId) {
-
-        return ResVo.success();
+    @GetMapping("/Tenants/{tenantId}/Accounts/{account}")
+    public ResVo<?> findAccounts(@PathVariable("tenantId") Long tenantId, @PathVariable("account") String account) {
+        return ResVo.success(accountMapper.selectByAccount(tenantId, account));
     }
 
     /**
      * 加好友
      * */
-    @PostMapping(value = "/Tenants/{tenantId}/Accounts/{accountId}", params = "action=addFriend")
-    public ResVo<?> addFriend(@PathVariable("tenantId") Long tenantId, @PathVariable("accountId") Long accountId, @RequestBody AddFriendReq req) {
-
+    @PostMapping(value = "/Tenants/{tenantId}/Accounts/{account}", params = "action=addFriend")
+    public ResVo<?> addFriend(@PathVariable("tenantId") Long tenantId, @PathVariable("account") String account, @RequestBody AddFriendReq req) {
+        accountService.addFriend(tenantId, account, req);
         return ResVo.success();
     }
 
     /**
      * 邀请
      * */
-    @PostMapping(value = "/Tenants/{tenantId}/Accounts/{accountId}", params = "action=applyToAddFriend")
-    public ResVo<?> applyToAddFriend(@PathVariable("tenantId") Long tenantId, @PathVariable("accountId") Long accountId, @RequestBody ApplyToAddFriendReq req) {
+    @PostMapping(value = "/Tenants/{tenantId}/Accounts/{account}", params = "action=applyToAddFriend")
+    public ResVo<?> applyToAddFriend(@PathVariable("tenantId") Long tenantId, @PathVariable("account") String account, @RequestBody ApplyToAddFriendReq req) {
 
         return ResVo.success();
     }
@@ -63,9 +85,9 @@ public class AccountRest {
     /**
      * 删除好友
      * */
-    @DeleteMapping(value = "/Tenants/{tenantId}/Accounts/{accountId}", params = "action=deleteFriend")
-    public ResVo<?> deleteFriend(@PathVariable("tenantId") Long tenantId, @PathVariable("accountId") Long accountId, @RequestBody DeleteFriendReq req) {
-
+    @DeleteMapping(value = "/Tenants/{tenantId}/Accounts/{account}", params = "action=deleteFriend")
+    public ResVo<?> deleteFriend(@PathVariable("tenantId") Long tenantId, @PathVariable("account") String account, @RequestBody DeleteFriendReq req) {
+        accountService.deleteFriend(tenantId, account, req);
         return ResVo.success();
     }
 
