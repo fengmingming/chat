@@ -10,10 +10,13 @@ import boluo.chat.rsocket.RSocketFactory;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.annotation.Resource;
+import jakarta.validation.Valid;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.validation.annotation.Validated;
 
 @Service
+@Validated
 public class MessageService {
 
     @Resource
@@ -29,7 +32,7 @@ public class MessageService {
      * 记录并发送消息
      * */
     @Transactional
-    public Message recordMessage(Message message) {
+    public Message recordMessage(@Valid Message message) {
         //保存
         MessageEntity me = new MessageEntity();
         me.setTenantId(Long.parseLong(message.getTenantId()));
@@ -40,6 +43,11 @@ public class MessageService {
             me.setMessage(objectMapper.writeValueAsString(message));
         } catch (JsonProcessingException e) {
             throw new RuntimeException(e);
+        }
+        if(message.getTimestamp() == null) {
+            me.setTimestamp(System.currentTimeMillis());
+        }else {
+            me.setTimestamp(message.getTimestamp());
         }
         messageMapper.insert(me);
         message.setMsgId(me.getMsgId().toString());

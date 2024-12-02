@@ -43,6 +43,7 @@ CREATE TABLE chat.`message` (
   `to` VARCHAR(100) not null comment '消息接收账号',
   `msg_type` VARCHAR(10) not null comment '消息类型',
   `message` TEXT null comment '消息内容',
+  `timestamp` timestamp not null comment '时间戳',
   primary key (msg_id),
   key tenant_to (tenant_id, `to`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 comment='消息';

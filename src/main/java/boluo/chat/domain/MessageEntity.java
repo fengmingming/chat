@@ -24,5 +24,7 @@ public class MessageEntity {
     private String msgType;
     @TableField(value = "message")
     private String message;
+    @TableField(value = "timestamp")
+    private Long timestamp;
 
 }

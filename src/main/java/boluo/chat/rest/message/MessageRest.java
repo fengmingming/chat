@@ -1,12 +1,20 @@
 package boluo.chat.rest.message;
 
 import boluo.chat.common.ResVo;
+import boluo.chat.domain.MessageEntity;
+import boluo.chat.mapper.MessageMapper;
 import boluo.chat.message.Message;
 import boluo.chat.service.message.MessageService;
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.annotation.Resource;
 import jakarta.validation.Valid;
 import lombok.Setter;
 import org.springframework.web.bind.annotation.*;
+
+import java.time.LocalDateTime;
+import java.time.ZoneOffset;
+import java.util.List;
 
 @Setter
 @RestController
@@ -14,6 +22,10 @@ public class MessageRest {
 
     @Resource
     private MessageService messageService;
+    @Resource
+    private MessageMapper messageMapper;
+    @Resource
+    private ObjectMapper objectMapper;
 
     /**
      * 发送消息
@@ -32,8 +44,28 @@ public class MessageRest {
      * */
     @GetMapping("/Tenants/{tenantId}/Accounts/{account}/Messages")
     public ResVo<?> findMessages(@PathVariable("tenantId") Long tenantId, @PathVariable("account") String account, FindMessagesReq req) {
-
-        return ResVo.success();
+        if(req.getPageSize() > 1000) {
+            return ResVo.error("pageSize must be less than 1000");
+        }
+        if(req.getStartTime() == null) {
+            req.setStartTime(LocalDateTime.now().plusDays(-7));
+        }
+        if(req.getEndTime() == null) {
+            req.setEndTime(LocalDateTime.now());
+        }
+        LambdaQueryWrapper<MessageEntity> queryWrapper = new LambdaQueryWrapper<>();
+        queryWrapper.eq(MessageEntity::getTenantId, tenantId);
+        queryWrapper.eq(MessageEntity::getTo, account);
+        queryWrapper.gt(req.getMaxMsgId() != null, MessageEntity::getMsgId, req.getMaxMsgId());
+        queryWrapper.between(MessageEntity::getTimestamp, req.getStartTime().toEpochSecond(ZoneOffset.ofHours(8)), req.getEndTime().toEpochSecond(ZoneOffset.ofHours(8)));
+        List<Message> messages = messageMapper.selectList(queryWrapper).stream().map(it -> {
+            try {
+                return objectMapper.readValue(it.getMessage(), Message.class);
+            } catch (Exception e) {
+                throw new RuntimeException(e);
+            }
+        }).toList();
+        return ResVo.success(messages);
     }
 
     /**
@@ -41,8 +73,28 @@ public class MessageRest {
      * */
     @GetMapping("/Tenants/{tenantId}/Groups/{groupId}/Messages")
     public ResVo<?> findGroupMessages(@PathVariable("tenantId") Long tenantId, @PathVariable("groupId") String groupId, FindGroupMessagesReq req) {
-
-        return ResVo.success();
+        if(req.getPageSize() > 1000) {
+            return ResVo.error("pageSize must be less than 1000");
+        }
+        if(req.getStartTime() == null) {
+            req.setStartTime(LocalDateTime.now().plusDays(-7));
+        }
+        if(req.getEndTime() == null) {
+            req.setEndTime(LocalDateTime.now());
+        }
+        LambdaQueryWrapper<MessageEntity> queryWrapper = new LambdaQueryWrapper<>();
+        queryWrapper.eq(MessageEntity::getTenantId, tenantId);
+        queryWrapper.eq(MessageEntity::getTo, "GROUP:" + groupId);
+        queryWrapper.gt(req.getMaxMsgId() != null, MessageEntity::getMsgId, req.getMaxMsgId());
+        queryWrapper.between(MessageEntity::getTimestamp, req.getStartTime().toEpochSecond(ZoneOffset.ofHours(8)), req.getEndTime().toEpochSecond(ZoneOffset.ofHours(8)));
+        List<Message> messages = messageMapper.selectList(queryWrapper).stream().map(it -> {
+            try {
+                return objectMapper.readValue(it.getMessage(), Message.class);
+            } catch (Exception e) {
+                throw new RuntimeException(e);
+            }
+        }).toList();
+        return ResVo.success(messages);
     }
 
 }

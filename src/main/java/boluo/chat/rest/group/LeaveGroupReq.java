@@ -5,6 +5,6 @@ import lombok.Setter;
 
 @Setter
 @Getter
-public class LeaveGroupReq {
+public class LeaveGroupReq extends LeaveGroupCommand{
 
 }

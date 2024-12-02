@@ -5,6 +5,6 @@ import lombok.Setter;
 
 @Setter
 @Getter
-public class JoinGroupReq {
+public class JoinGroupReq extends JoinGroupCommand{
 
 }

@@ -2,6 +2,8 @@ package boluo.chat.common;
 
 public enum SessionRoleEnum {
 
-    Manager, Tenant, Account;
+    Manager, //管理员
+    Tenant, //租户
+    Account; //账户
 
 }
