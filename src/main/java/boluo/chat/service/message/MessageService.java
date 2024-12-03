@@ -61,4 +61,10 @@ public class MessageService {
         requester.sendMessage(message).subscribe();
     }
 
+    @Transactional
+    public void recordAndSendMessage(Message message) {
+        recordMessage(message);
+        sendMessage(message);
+    }
+
 }

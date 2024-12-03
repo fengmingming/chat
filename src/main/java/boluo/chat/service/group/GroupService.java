@@ -1,12 +1,16 @@
 package boluo.chat.service.group;
 
+import boluo.chat.common.TransactionalTool;
 import boluo.chat.domain.*;
 import boluo.chat.mapper.AccountMapper;
 import boluo.chat.mapper.GroupApplyFormMapper;
 import boluo.chat.mapper.GroupMapper;
 import boluo.chat.mapper.GroupMemberMapper;
+import boluo.chat.message.ControlMessage;
+import boluo.chat.message.Message;
 import boluo.chat.rest.group.JoinGroupCommand;
 import boluo.chat.rest.group.LeaveGroupCommand;
+import boluo.chat.service.message.MessageService;
 import cn.hutool.core.util.StrUtil;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
@@ -32,6 +36,8 @@ public class GroupService {
     private GroupMemberMapper groupMemberMapper;
     @Resource
     private GroupApplyFormMapper groupApplyFormMapper;
+    @Resource
+    private MessageService messageService;
 
     @Transactional
     public Group createGroup(@NotNull Long tenantId, @Valid CreateGroupCommand command) {
@@ -142,9 +148,10 @@ public class GroupService {
             if(statusEnum == GroupApplyFormStatusEnum.Agreed) {
                 Account account = accountMapper.selectById(form.getAccountId());
                 addGroupMembers(tenantId, groupId, List.of(account.getAccount()));
-
-            }else {
-
+                TransactionalTool.afterCommit(() -> {
+                    ControlMessage message = new ControlMessage();
+                    messageService.sendMessage(message);
+                });
             }
         }
     }
