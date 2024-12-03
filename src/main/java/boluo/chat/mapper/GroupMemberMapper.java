@@ -18,4 +18,13 @@ public interface GroupMemberMapper extends BaseMapper<GroupMember> {
         return selectList(queryWrapper).stream().map(GroupMember::getAccountId).toList();
     }
 
+    default GroupMember selectByAccountId(Long tenantId, Long groupId, Long accountId) {
+        Objects.requireNonNull(tenantId, "tenantId is null");
+        Objects.requireNonNull(groupId, "groupId is null");
+        Objects.requireNonNull(accountId, "accountId is null");
+        LambdaQueryWrapper<GroupMember> queryWrapper = new LambdaQueryWrapper<>();
+        queryWrapper.eq(GroupMember::getTenantId, tenantId).eq(GroupMember::getGroupId, groupId).eq(GroupMember::getAccountId, accountId).eq(GroupMember::getDeleted, 0L);
+        return selectOne(queryWrapper);
+    }
+
 }

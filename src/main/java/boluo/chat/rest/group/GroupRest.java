@@ -1,10 +1,9 @@
 package boluo.chat.rest.group;
 
 import boluo.chat.common.ResVo;
-import boluo.chat.domain.Account;
-import boluo.chat.domain.Group;
-import boluo.chat.domain.GroupMember;
+import boluo.chat.domain.*;
 import boluo.chat.mapper.AccountMapper;
+import boluo.chat.mapper.GroupApplyFormMapper;
 import boluo.chat.mapper.GroupMapper;
 import boluo.chat.mapper.GroupMemberMapper;
 import boluo.chat.service.group.GroupService;
@@ -28,6 +27,8 @@ public class GroupRest {
     private AccountMapper accountMapper;
     @Resource
     private GroupMapper groupMapper;
+    @Resource
+    private GroupApplyFormMapper groupApplyFormMapper;
 
     /**
      * 创建群
@@ -79,7 +80,40 @@ public class GroupRest {
      * */
     @PostMapping(value = "/Tenants/{tenantId}/Groups/{groupId}", params = "action=applyToJoinGroup")
     public ResVo<?> applyToJoinGroup(@PathVariable("tenantId") Long tenantId, @PathVariable("groupId") String groupId, @RequestBody ApplyToJoinGroupReq req) {
+        groupService.applyToJoinGroup(req);
+        return ResVo.success();
+    }
 
+    /**
+     * 查询申请
+     * */
+    @GetMapping("/Tenants/{tenantId}/Groups/{groupId}/GroupApplyForms")
+    public ResVo<?> findGroupApplyForms(@PathVariable("tenantId") Long tenantId, @PathVariable("groupId") String groupId, @Valid FindGroupApplyFormsReq req) {
+        Group group = groupMapper.selectByGroupId(tenantId, groupId);
+        Account account = accountMapper.selectByAccount(tenantId, req.getAccount());
+        GroupMember gm = groupMemberMapper.selectByAccountId(tenantId, group.getId(), account.getId());
+        if(gm != null && GroupMemberRoleEnum.valueOf(gm.getRole()) == GroupMemberRoleEnum.admin) {
+            //群主
+            LambdaQueryWrapper<GroupApplyForm> queryWrapper = new LambdaQueryWrapper<>();
+            queryWrapper.eq(GroupApplyForm::getTenantId, tenantId).eq(GroupApplyForm::getGroupId, group.getId()).eq(GroupApplyForm::getDeleted, 0L);
+            queryWrapper.eq(req.getStatus() != null, GroupApplyForm::getStatus, req.getStatus());
+            queryWrapper.orderByDesc(GroupApplyForm::getId);
+            return ResVo.success(groupApplyFormMapper.selectList(queryWrapper));
+        }else {
+            //个人
+            LambdaQueryWrapper<GroupApplyForm> queryWrapper = new LambdaQueryWrapper<>();
+            queryWrapper.eq(GroupApplyForm::getTenantId, tenantId).eq(GroupApplyForm::getGroupId, group.getId()).eq(GroupApplyForm::getDeleted, 0L);
+            queryWrapper.eq(GroupApplyForm::getAccountId, account.getId());
+            queryWrapper.eq(req.getStatus() != null, GroupApplyForm::getStatus, req.getStatus());
+            queryWrapper.orderByDesc(GroupApplyForm::getId);
+            return ResVo.success(groupApplyFormMapper.selectList(queryWrapper));
+        }
+    }
+
+    @PutMapping("/Tenants/{tenantId}/Groups/{groupId}/GroupApplyForms/{groupApplyFormId}")
+    public ResVo<?> updateGroupApplyFormStatus(@PathVariable("tenantId") Long tenantId, @PathVariable("groupId") String groupId, @PathVariable("groupApplyFormId") Long groupApplyFormId, @Valid @RequestBody UpdateGroupApplyFormStatusReq req) {
+        Group group = groupMapper.selectByGroupId(tenantId, groupId);
+        groupService.updateGroupApplyFormStatus(tenantId, group.getId(), groupApplyFormId, GroupApplyFormStatusEnum.findByCode(req.getStatus()));
         return ResVo.success();
     }
 

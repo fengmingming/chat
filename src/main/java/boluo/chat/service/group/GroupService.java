@@ -1,15 +1,14 @@
 package boluo.chat.service.group;
 
-import boluo.chat.domain.Account;
-import boluo.chat.domain.Group;
-import boluo.chat.domain.GroupMember;
-import boluo.chat.domain.GroupStateEnum;
+import boluo.chat.domain.*;
 import boluo.chat.mapper.AccountMapper;
+import boluo.chat.mapper.GroupApplyFormMapper;
 import boluo.chat.mapper.GroupMapper;
 import boluo.chat.mapper.GroupMemberMapper;
 import boluo.chat.rest.group.JoinGroupCommand;
 import boluo.chat.rest.group.LeaveGroupCommand;
 import cn.hutool.core.util.StrUtil;
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
 import jakarta.annotation.Resource;
 import jakarta.validation.Valid;
@@ -31,6 +30,8 @@ public class GroupService {
     private AccountMapper accountMapper;
     @Resource
     private GroupMemberMapper groupMemberMapper;
+    @Resource
+    private GroupApplyFormMapper groupApplyFormMapper;
 
     @Transactional
     public Group createGroup(@NotNull Long tenantId, @Valid CreateGroupCommand command) {
@@ -110,6 +111,41 @@ public class GroupService {
             updateWrapper.eq(GroupMember::getGroupId, groupId);
             updateWrapper.in(GroupMember::getAccountId, accountIds);
             groupMemberMapper.update(updateWrapper);
+        }
+    }
+
+    @Transactional
+    public void applyToJoinGroup(@NotNull @Valid ApplyToJoinGroupCommand command) {
+        Account account = accountMapper.selectByAccount(command.getTenantId(), command.getAccount());
+        Group group = groupMapper.selectByGroupId(command.getTenantId(), command.getGroupId());
+        if(!groupApplyFormMapper.exists(command.getTenantId(), group.getId(), account.getId())) {
+            GroupApplyForm form = new GroupApplyForm();
+            form.setTenantId(command.getTenantId());
+            form.setGroupId(group.getId());
+            form.setAccountId(account.getId());
+            form.setStatus(GroupApplyFormStatusEnum.Applied.getCode());
+            form.setCreateTime(LocalDateTime.now());
+            form.setUpdateTime(LocalDateTime.now());
+            groupApplyFormMapper.insert(form);
+        }
+    }
+
+    @Transactional
+    public void updateGroupApplyFormStatus(Long tenantId, Long groupId, Long groupApplyFormId, GroupApplyFormStatusEnum statusEnum) {
+        LambdaQueryWrapper<GroupApplyForm> queryWrapper = new LambdaQueryWrapper<>();
+        queryWrapper.eq(GroupApplyForm::getTenantId, tenantId).eq(GroupApplyForm::getGroupId, groupId).eq(GroupApplyForm::getId, groupApplyFormId).eq(GroupApplyForm::getDeleted, 0L);
+        GroupApplyForm form = groupApplyFormMapper.selectOne(queryWrapper);
+        if(form != null && GroupApplyFormStatusEnum.findByCode(form.getStatus()) == GroupApplyFormStatusEnum.Applied) {
+            form.setStatus(statusEnum.getCode());
+            form.setUpdateTime(LocalDateTime.now());
+            groupApplyFormMapper.updateById(form);
+            if(statusEnum == GroupApplyFormStatusEnum.Agreed) {
+                Account account = accountMapper.selectById(form.getAccountId());
+                addGroupMembers(tenantId, groupId, List.of(account.getAccount()));
+
+            }else {
+
+            }
         }
     }
 
