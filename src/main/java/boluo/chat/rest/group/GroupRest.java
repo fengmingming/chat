@@ -7,6 +7,7 @@ import boluo.chat.mapper.GroupApplyFormMapper;
 import boluo.chat.mapper.GroupMapper;
 import boluo.chat.mapper.GroupMemberMapper;
 import boluo.chat.service.group.GroupService;
+import boluo.chat.service.group.UpdateGroupApplyFormStatusCommand;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import jakarta.annotation.Resource;
 import jakarta.validation.Valid;
@@ -111,9 +112,15 @@ public class GroupRest {
     }
 
     @PutMapping("/Tenants/{tenantId}/Groups/{groupId}/GroupApplyForms/{groupApplyFormId}")
-    public ResVo<?> updateGroupApplyFormStatus(@PathVariable("tenantId") Long tenantId, @PathVariable("groupId") String groupId, @PathVariable("groupApplyFormId") Long groupApplyFormId, @Valid @RequestBody UpdateGroupApplyFormStatusReq req) {
-        Group group = groupMapper.selectByGroupId(tenantId, groupId);
-        groupService.updateGroupApplyFormStatus(tenantId, group.getId(), groupApplyFormId, GroupApplyFormStatusEnum.findByCode(req.getStatus()));
+    public ResVo<?> updateGroupApplyFormStatus(@PathVariable("tenantId") Long tenantId, @PathVariable("groupId") String groupId,
+                                               @PathVariable("groupApplyFormId") Long groupApplyFormId, @Valid @RequestBody UpdateGroupApplyFormStatusReq req) {
+        UpdateGroupApplyFormStatusCommand command = new UpdateGroupApplyFormStatusCommand();
+        command.setGroupApplyFormId(groupApplyFormId);
+        command.setTenantId(tenantId);
+        command.setGroupId(groupId);
+        command.setAccount(req.getAccount());
+        command.setStatus(GroupApplyFormStatusEnum.findByCode(req.getStatus()));
+        groupService.updateGroupApplyFormStatus(command);
         return ResVo.success();
     }
 

@@ -3,8 +3,11 @@ package boluo.chat.rest.account;
 import boluo.chat.common.PageVo;
 import boluo.chat.common.ResVo;
 import boluo.chat.domain.Account;
+import boluo.chat.domain.AccountApplyFormStatusEnum;
 import boluo.chat.mapper.AccountMapper;
 import boluo.chat.service.account.AccountService;
+import boluo.chat.service.account.ApplyToAddFriendCommand;
+import boluo.chat.service.account.UpdateAccountApplyFormStatusCommand;
 import cn.hutool.core.util.StrUtil;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
@@ -74,11 +77,28 @@ public class AccountRest {
     }
 
     /**
-     * 邀请
+     * 申请
      * */
-    @PostMapping(value = "/Tenants/{tenantId}/Accounts/{account}", params = "action=applyToAddFriend")
-    public ResVo<?> applyToAddFriend(@PathVariable("tenantId") Long tenantId, @PathVariable("account") String account, @RequestBody ApplyToAddFriendReq req) {
+    @PostMapping(value = "/Tenants/{tenantId}/Accounts/{account}/AccountApplyForm")
+    public ResVo<?> applyToAddFriend(@PathVariable("tenantId") Long tenantId, @PathVariable("account") String account, @Valid @RequestBody ApplyToAddFriendReq req) {
+        ApplyToAddFriendCommand command = new ApplyToAddFriendCommand();
+        command.setAccount(req.getAccount());
+        command.setApplyAccount(account);
+        command.setTenantId(tenantId);
+        command.setRemark(req.getRemark());
+        accountService.applyToAddFriend(command);
+        return ResVo.success();
+    }
 
+    @PutMapping(value = "/Tenants/{tenantId}/Accounts/{account}/AccountApplyForm/{accountApplyFormId}")
+    public ResVo<?> updateAccountApplyFormStatus(@PathVariable("tenantId") Long tenantId, @PathVariable("account") String account,
+                                                 @PathVariable("accountApplyFormId") Long accountApplyFormId, @Valid @RequestBody UpdateAccountApplyFormStatusReq req) {
+        UpdateAccountApplyFormStatusCommand command = new UpdateAccountApplyFormStatusCommand();
+        command.setTenantId(tenantId);
+        command.setAccountApplyFormId(accountApplyFormId);
+        command.setStatus(AccountApplyFormStatusEnum.findByCode(req.getStatus()));
+        command.setAccount(account);
+        accountService.updateAccountApplyFormStatus(command);
         return ResVo.success();
     }
 

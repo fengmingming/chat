@@ -89,3 +89,18 @@ create table chat.group_apply_form (
     primary key (id),
     key group_id (group_id)
 )engine=INNODB default charset=utf8mb4 comment='加入群组申请表';
+
+create table chat.account_apply_form (
+    id bigint not null comment '申请id',
+    tenant_id bigint not null comment '租户id',
+    account_id bigint not null comment '账户id',
+    apply_account_id bigint not null comment '申请账户id',
+    `status` int not null comment '10 已申请 20 已同意 30 拒绝',
+    deleted bigint not null default 0 comment '删除标识',
+    create_time datetime not null comment '创建时间',
+    update_time datetime not null comment '修改时间',
+    primary key (id),
+    key account_id (account_id),
+    key apply_account_id (apply_account_id)
+)engine=INNODB default charset=utf8mb4 comment='加好友申请表';
+

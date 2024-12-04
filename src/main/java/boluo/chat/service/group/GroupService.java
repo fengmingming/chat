@@ -7,7 +7,6 @@ import boluo.chat.mapper.GroupApplyFormMapper;
 import boluo.chat.mapper.GroupMapper;
 import boluo.chat.mapper.GroupMemberMapper;
 import boluo.chat.message.ControlMessage;
-import boluo.chat.message.Message;
 import boluo.chat.rest.group.JoinGroupCommand;
 import boluo.chat.rest.group.LeaveGroupCommand;
 import boluo.chat.service.message.MessageService;
@@ -137,19 +136,25 @@ public class GroupService {
     }
 
     @Transactional
-    public void updateGroupApplyFormStatus(Long tenantId, Long groupId, Long groupApplyFormId, GroupApplyFormStatusEnum statusEnum) {
+    public void updateGroupApplyFormStatus(@Valid UpdateGroupApplyFormStatusCommand command) {
+        Group group = groupMapper.selectByGroupId(command.getTenantId(), command.getGroupId());
         LambdaQueryWrapper<GroupApplyForm> queryWrapper = new LambdaQueryWrapper<>();
-        queryWrapper.eq(GroupApplyForm::getTenantId, tenantId).eq(GroupApplyForm::getGroupId, groupId).eq(GroupApplyForm::getId, groupApplyFormId).eq(GroupApplyForm::getDeleted, 0L);
+        queryWrapper.eq(GroupApplyForm::getTenantId, command.getTenantId()).eq(GroupApplyForm::getGroupId, group.getId())
+                .eq(GroupApplyForm::getId, command.getGroupApplyFormId()).eq(GroupApplyForm::getDeleted, 0L);
         GroupApplyForm form = groupApplyFormMapper.selectOne(queryWrapper);
         if(form != null && GroupApplyFormStatusEnum.findByCode(form.getStatus()) == GroupApplyFormStatusEnum.Applied) {
-            form.setStatus(statusEnum.getCode());
+            form.setStatus(command.getStatus().getCode());
             form.setUpdateTime(LocalDateTime.now());
             groupApplyFormMapper.updateById(form);
-            if(statusEnum == GroupApplyFormStatusEnum.Agreed) {
+            if(command.getStatus() == GroupApplyFormStatusEnum.Agreed) {
                 Account account = accountMapper.selectById(form.getAccountId());
-                addGroupMembers(tenantId, groupId, List.of(account.getAccount()));
+                addGroupMembers(command.getTenantId(), group.getId(), List.of(account.getAccount()));
+                ControlMessage message = new ControlMessage();
+                message.setTenantId(command.getTenantId().toString());
+                message.setFrom(command.getAccount());
+                message.setTo("GROUP:" + group.getGroupId());
+                //TODO command
                 TransactionalTool.afterCommit(() -> {
-                    ControlMessage message = new ControlMessage();
                     messageService.sendMessage(message);
                 });
             }

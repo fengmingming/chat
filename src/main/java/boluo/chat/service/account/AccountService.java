@@ -1,11 +1,12 @@
 package boluo.chat.service.account;
 
-import boluo.chat.domain.Account;
-import boluo.chat.domain.Relationship;
-import boluo.chat.domain.RelationshipStateEnum;
+import boluo.chat.common.TransactionalTool;
+import boluo.chat.domain.*;
+import boluo.chat.mapper.AccountApplyFormMapper;
 import boluo.chat.mapper.AccountMapper;
 import boluo.chat.mapper.RelationshipMapper;
-import boluo.chat.mapper.TenantMapper;
+import boluo.chat.message.ControlMessage;
+import boluo.chat.service.message.MessageService;
 import cn.hutool.core.util.StrUtil;
 import cn.hutool.crypto.digest.BCrypt;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
@@ -26,11 +27,13 @@ import java.time.LocalDateTime;
 public class AccountService {
 
     @Resource
-    private TenantMapper tenantMapper;
-    @Resource
     private AccountMapper accountMapper;
     @Resource
     private RelationshipMapper relationshipMapper;
+    @Resource
+    private AccountApplyFormMapper accountApplyFormMapper;
+    @Resource
+    private MessageService messageService;
 
     @Transactional
     public Account createAccount(@NotNull Long tenantId, @Valid CreateAccountCommand command) {
@@ -98,6 +101,49 @@ public class AccountService {
         if(relationship != null) {
             relationship.setDeleted(System.currentTimeMillis());
             relationshipMapper.updateById(relationship);
+        }
+    }
+
+    @Transactional
+    public void applyToAddFriend(@Valid ApplyToAddFriendCommand command) {
+        Account applyAccount = accountMapper.selectByAccount(command.getTenantId(), command.getApplyAccount());
+        Account account = accountMapper.selectByAccount(command.getTenantId(), command.getAccount());
+        if(!accountApplyFormMapper.exists(command.getTenantId(), applyAccount.getId(), account.getId())) {
+            AccountApplyForm form = new AccountApplyForm();
+            form.setTenantId(command.getTenantId());
+            form.setApplyAccountId(applyAccount.getId());
+            form.setAccountId(account.getId());
+            form.setStatus(AccountApplyFormStatusEnum.Applied.getCode());
+            form.setCreateTime(LocalDateTime.now());
+            form.setUpdateTime(LocalDateTime.now());
+            accountApplyFormMapper.insert(form);
+        }
+    }
+
+    @Transactional
+    public void updateAccountApplyFormStatus(UpdateAccountApplyFormStatusCommand command) {
+        Account accountEntity = accountMapper.selectByAccount(command.getTenantId(), command.getAccount());
+        LambdaQueryWrapper<AccountApplyForm> queryWrapper = new LambdaQueryWrapper<>();
+        queryWrapper.eq(AccountApplyForm::getId, command.getAccountApplyFormId())
+                .eq(AccountApplyForm::getTenantId, command.getTenantId())
+                .eq(AccountApplyForm::getAccountId, accountEntity.getId())
+                .eq(AccountApplyForm::getStatus, AccountApplyFormStatusEnum.Applied.getCode())
+                .eq(AccountApplyForm::getDeleted, 0L);
+        AccountApplyForm form = accountApplyFormMapper.selectOne(queryWrapper);
+        if(form != null) {
+            form.setStatus(command.getStatus().getCode());
+            form.setUpdateTime(LocalDateTime.now());
+            accountApplyFormMapper.updateById(form);
+            if(command.getStatus() == AccountApplyFormStatusEnum.Agreed) {
+                Account toAccount = accountMapper.selectById(form.getApplyAccountId());
+                ControlMessage message = new ControlMessage();
+                message.setTenantId(command.getTenantId().toString());
+                message.setFrom(command.getAccount());
+                message.setTo(toAccount.getAccount());
+                TransactionalTool.afterCommit(() -> {
+                    messageService.recordAndSendMessage(message);
+                });
+            }
         }
     }
 
