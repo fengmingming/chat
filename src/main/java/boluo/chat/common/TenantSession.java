@@ -11,4 +11,8 @@ public class TenantSession extends Session {
 
     private List<Long> tenantIds;
 
+    public TenantSession() {
+        super(SessionRoleEnum.Tenant);
+    }
+
 }
