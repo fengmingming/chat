@@ -7,7 +7,7 @@ import java.util.List;
 
 @Setter
 @Getter
-public class AccountSession extends Session{
+public class AccountSession extends Session {
 
     private List<SimpleAccount> accounts;
 

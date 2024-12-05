@@ -1,25 +1,42 @@
 package boluo.chat.common;
 
+/**
+ * 业务逻辑判断结果
+ * */
 public class Can {
 
     private final boolean result;
-    private ResVo<?> error;
+    private Integer code;
+    private String codeDesc;
 
     public Can(boolean result) {
         this.result = result;
     }
 
-    public Can(ResVo<?> error) {
+    public Can(int code, String codeDesc) {
         this(false);
-        this.error = error;
+        this.code = code;
+        this.codeDesc = codeDesc;
     }
 
     public ResVo<?> error() {
-        return this.error;
+        if(result) return null;
+        return ResVo.error(code, codeDesc);
     }
 
     public boolean get() {
         return result;
+    }
+
+    public CodedException exception() {
+        if(result) return null;
+        return new CodedException(code, codeDesc);
+    }
+
+    public void throwException() {
+        if(!result) {
+            throw exception();
+        }
     }
 
 }

@@ -84,16 +84,6 @@ public class GroupService {
                         return gm;
                     }).toList();
             groupMemberMapper.insert(gms);
-            //存在的修改状态
-            List<Long> existAccountIds = accountEntities.stream().map(Account::getId).filter(accountIds::contains).toList();
-            if(!existAccountIds.isEmpty()) {
-                LambdaUpdateWrapper<GroupMember> updateWrapper = new LambdaUpdateWrapper<>();
-                updateWrapper.set(GroupMember::getDeleted, 0L);
-                updateWrapper.eq(GroupMember::getTenantId, tenantId);
-                updateWrapper.eq(GroupMember::getGroupId, groupId);
-                updateWrapper.in(GroupMember::getAccountId, existAccountIds);
-                groupMemberMapper.update(updateWrapper);
-            }
         }
     }
 

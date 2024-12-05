@@ -15,6 +15,7 @@ public interface GroupMemberMapper extends BaseMapper<GroupMember> {
         LambdaQueryWrapper<GroupMember> queryWrapper = new LambdaQueryWrapper<>();
         queryWrapper.eq(GroupMember::getTenantId, tenantId);
         queryWrapper.eq(GroupMember::getGroupId, groupId);
+        queryWrapper.eq(GroupMember::getDeleted, 0L);
         return selectList(queryWrapper).stream().map(GroupMember::getAccountId).toList();
     }
 
