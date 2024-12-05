@@ -11,8 +11,4 @@ public class AccountSession extends Session {
 
     private List<SimpleAccount> accounts;
 
-    public AccountSession() {
-        super(SessionRoleEnum.Account);
-    }
-
 }

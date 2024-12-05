@@ -68,6 +68,7 @@ CREATE TABLE chat.`tenant` (
   `password` VARCHAR(255) null comment '密码',
   `lease_deadline_date` DATETIME null comment '租期截至日期',
   `sign_secret` VARCHAR(256) not null comment '签名密钥',
+  `timeout` INT not null comment '超时时间',
   `public_key` varchar(2048) null comment '公钥',
   `private_key` varchar(2048) null comment '私钥',
   `state` INT not null DEFAULT 1 comment '状态 1 初始化',

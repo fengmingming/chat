@@ -49,6 +49,10 @@ public class Tenant {
     @TableField(value = "sign_secret")
     private String signSecret;
     /**
+     * 超时时间
+     * */
+    private long timeout = 24;
+    /**
      * 公钥，用于加解密
      * */
     @TableField(value = "public_key")

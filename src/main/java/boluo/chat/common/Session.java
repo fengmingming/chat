@@ -1,7 +1,5 @@
 package boluo.chat.common;
 
-import com.fasterxml.jackson.annotation.JsonCreator;
-import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -9,23 +7,33 @@ import lombok.Setter;
 @Getter
 public class Session {
 
-    private final SessionRoleEnum sessionRole;
+    private static ThreadLocal<Session> cache = new ThreadLocal<>();
 
-    @JsonCreator
-    public Session(@JsonProperty("sessionRole") SessionRoleEnum sessionRole) {
-        this.sessionRole = sessionRole;
+    public static Session currentSession() {
+        return cache.get();
     }
 
+    public static void saveSession(Session session) {
+        cache.set(session);
+    }
+
+    public static void clearSession() {
+        cache.remove();
+    }
+
+    private String signSecret;
+    private SessionRoleEnum role;
+
     public boolean isManager() {
-        return sessionRole == SessionRoleEnum.Manager;
+        return role == SessionRoleEnum.Manager;
     }
 
     public boolean isTenant() {
-        return sessionRole == SessionRoleEnum.Tenant;
+        return role == SessionRoleEnum.Tenant;
     }
 
     public boolean isAccount() {
-        return sessionRole == SessionRoleEnum.Account;
+        return role == SessionRoleEnum.Account;
     }
 
 }
