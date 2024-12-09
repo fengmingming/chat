@@ -1,6 +1,7 @@
 package boluo.chat.service.account;
 
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -8,7 +9,7 @@ import lombok.Setter;
 @Getter
 public class ApplyToAddFriendCommand {
 
-    @NotBlank(message = "tenantId is blank")
+    @NotNull(message = "tenantId is null")
     private Long tenantId;
     @NotBlank(message = "account is blank")
     private String account;
