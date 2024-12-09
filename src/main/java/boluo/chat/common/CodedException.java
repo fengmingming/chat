@@ -5,10 +5,11 @@ import lombok.Getter;
 @Getter
 public class CodedException extends RuntimeException{
 
-    private int code;
+    private final int code;
 
     public CodedException(int code, String message) {
         super(message);
+        this.code = code;
     }
 
 }

@@ -1,11 +1,13 @@
 package boluo.chat.domain;
 
+import boluo.chat.common.StringSerializer;
 import com.baomidou.mybatisplus.annotation.IdType;
 import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
 import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -20,6 +22,7 @@ public class Tenant {
      * 租户id
      * */
     @TableId(value = "tenant_id", type = IdType.ASSIGN_ID)
+    @JsonSerialize(using = StringSerializer.class)
     private Long tenantId;
     /**
      * 租户名称
@@ -51,6 +54,7 @@ public class Tenant {
     /**
      * 超时时间
      * */
+    @TableField(value = "timeout")
     private long timeout = 24;
     /**
      * 公钥，用于加解密

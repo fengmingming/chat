@@ -142,6 +142,14 @@ public class GroupRest {
     }
 
     /**
+     * 群成员
+     * */
+    @GetMapping("/Tenants/Groups/Members")
+    public ResVo<?> listGroupMembers(@RequestParam("tenantId") Long tenantId, @RequestParam("groupId") String groupId) {
+        return findGroupMembers(tenantId, groupId);
+    }
+
+    /**
      * 我的群
      * */
     @GetMapping("/Tenants/{tenantId}/Accounts/{account}/Groups")

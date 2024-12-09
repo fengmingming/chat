@@ -3,6 +3,7 @@ package boluo.chat.service.tenant;
 import boluo.chat.domain.Tenant;
 import boluo.chat.domain.TenantStateEnum;
 import boluo.chat.mapper.TenantMapper;
+import cn.hutool.core.util.RandomUtil;
 import cn.hutool.core.util.StrUtil;
 import cn.hutool.crypto.digest.BCrypt;
 import jakarta.annotation.Resource;
@@ -26,6 +27,7 @@ public class TenantService {
         if(StrUtil.isNotBlank(command.getPassword())) {
             tenant.setPassword(BCrypt.hashpw(command.getPassword(), BCrypt.gensalt()));
         }
+        tenant.setSignSecret(RandomUtil.randomString(32));
         tenant.setState(TenantStateEnum.INIT.getCode());
         tenant.setCreateTime(LocalDateTime.now());
         tenant.setUpdateTime(LocalDateTime.now());

@@ -14,4 +14,15 @@ public class ControlMessage extends Message {
     private String command;
     private List<Object> args;
 
+    /**
+     * 审核群申请命令通知
+     * */
+    public static final String REVIEW_GROUP_JOIN_REQUEST_NOTIFICATION = "reviewGroupJoinRequestNotification";
+
+    /**
+     * 审核加好友命令通知
+     * */
+    public static final String REVIEW_FRIEND_REQUEST_NOTIFICATION = "reviewFriendRequestNotification";
+
+
 }

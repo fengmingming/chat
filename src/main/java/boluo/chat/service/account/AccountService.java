@@ -20,6 +20,7 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.validation.annotation.Validated;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 
 @Service
 @Setter
@@ -140,6 +141,8 @@ public class AccountService {
                 message.setTenantId(command.getTenantId().toString());
                 message.setFrom(command.getAccount());
                 message.setTo(toAccount.getAccount());
+                message.setCommand(ControlMessage.REVIEW_FRIEND_REQUEST_NOTIFICATION);
+                message.setArgs(new ArrayList<>());
                 TransactionalTool.afterCommit(() -> {
                     messageService.recordAndSendMessage(message);
                 });

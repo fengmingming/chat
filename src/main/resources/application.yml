@@ -14,9 +14,15 @@ spring:
   datasource:
     url: jdbc:mysql://127.0.0.1:3306/chat?useSSL=true
     username: root
-    password:
+    password: 123456
     driver-class-name: com.mysql.cj.jdbc.Driver
 
 boluo:
   chat:
     im-address: 127.0.0.1:40486
+    groupKeyTemplate: boluo:chat:tenant:{tenantId}:group:{groupId}:members
+    ignoreUrls:
+      - POST:/Tenants
+      - POST:/Tenants/Login
+      - POST:/Tenants/{tenantId}/Accounts/Login
+      - GET:/validToken

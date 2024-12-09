@@ -1,6 +1,6 @@
 package boluo.chat.service.group;
 
-import jakarta.validation.constraints.Max;
+import jakarta.validation.constraints.Size;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -8,7 +8,7 @@ import lombok.Setter;
 @Getter
 public class UpdateGroupCommand {
 
-    @Max(value = 100, message = "groupName less than 100")
+    @Size(max = 100, message = "groupName less than 100")
     private String groupName;
 
 }

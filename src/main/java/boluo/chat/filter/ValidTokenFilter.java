@@ -1,6 +1,7 @@
 package boluo.chat.filter;
 
 import boluo.chat.common.*;
+import boluo.chat.config.ChatProperties;
 import cn.hutool.core.util.StrUtil;
 import cn.hutool.json.JSONObject;
 import cn.hutool.json.JSONUtil;
@@ -21,7 +22,6 @@ import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
-import java.util.List;
 
 @Slf4j
 @Setter
@@ -30,7 +30,8 @@ public class ValidTokenFilter extends OncePerRequestFilter {
     @Resource
     private RedissonClient redissonClient;
     private AntPathMatcher matcher = new AntPathMatcher();
-    private List<String> ignoreUrls = List.of("/Tenants", "/Tenants/Login", "/Tenants/{tenantId}/Accounts/Login");
+    @Resource
+    private ChatProperties chatProperties;
 
     @Override
     protected void doFilterInternal(HttpServletRequest req, HttpServletResponse res, FilterChain chain) throws ServletException, IOException {
@@ -39,7 +40,7 @@ public class ValidTokenFilter extends OncePerRequestFilter {
             chain.doFilter(req, res);
         }else {
             String token = req.getHeader("Authorization");
-            if(StrUtil.isNotBlank(token)) {
+            if(StrUtil.isBlank(token)) {
                 token = req.getParameter("Authorization");
             }
             try {
@@ -56,9 +57,15 @@ public class ValidTokenFilter extends OncePerRequestFilter {
 
     private boolean ignoreValid(HttpServletRequest req) {
         HttpMethod method = HttpMethod.valueOf(req.getMethod());
-        if(!HttpMethod.POST.equals(method)) return false;
         String url = req.getServletPath();
-        return ignoreUrls.stream().anyMatch(it -> {
+        return chatProperties.getIgnoreUrls().stream().anyMatch(it -> {
+            if(it.contains(":")) {
+                String[] arr = it.split(":");
+                if(!method.matches(arr[0])) {
+                    return false;
+                }
+                it = arr[1];
+            }
             return matcher.match(it, url);
         });
     }

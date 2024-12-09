@@ -1,7 +1,6 @@
 package boluo.chat.service.tenant;
 
-import jakarta.validation.constraints.Max;
-import jakarta.validation.constraints.Min;
+import jakarta.validation.constraints.Size;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -9,19 +8,17 @@ import lombok.Setter;
 @Getter
 public class UpdateTenantCommand {
 
-    @Max(11)
-    @Min(11)
+    @Size(min = 11, max = 11)
     private String phone;
-    @Min(6)
-    @Max(20)
+    @Size(min = 6, max = 20)
     private String password;
-    @Max(100)
+    @Size(max = 100)
     private String tenantName;
-    @Max(256)
+    @Size(max = 256)
     private String signSecret;
-    @Max(2048)
+    @Size(max = 2048)
     private String publicKey;
-    @Max(2048)
+    @Size(max = 2048)
     private String privateKey;
 
 }
