@@ -12,8 +12,8 @@ import java.time.LocalDateTime;
 
 @Setter
 @Getter
-@TableName("account_apply_form")
-public class AccountApplyForm {
+@TableName("friend_apply_form")
+public class FriendApplyForm {
 
     @TableId(value = "id", type = IdType.ASSIGN_ID)
     private Long id;

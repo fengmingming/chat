@@ -6,7 +6,7 @@ import lombok.Setter;
 
 @Setter
 @Getter
-public class UpdateAccountApplyFormStatusReq {
+public class UpdateFriendApplyFormStatusReq {
 
     @NotNull
     private Integer status;

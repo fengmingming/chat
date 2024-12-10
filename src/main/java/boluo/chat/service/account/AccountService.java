@@ -2,8 +2,8 @@ package boluo.chat.service.account;
 
 import boluo.chat.common.TransactionalTool;
 import boluo.chat.domain.*;
-import boluo.chat.mapper.AccountApplyFormMapper;
 import boluo.chat.mapper.AccountMapper;
+import boluo.chat.mapper.FriendApplyFormMapper;
 import boluo.chat.mapper.RelationshipMapper;
 import boluo.chat.message.ControlMessage;
 import boluo.chat.service.message.MessageService;
@@ -32,7 +32,7 @@ public class AccountService {
     @Resource
     private RelationshipMapper relationshipMapper;
     @Resource
-    private AccountApplyFormMapper accountApplyFormMapper;
+    private FriendApplyFormMapper friendApplyFormMapper;
     @Resource
     private MessageService messageService;
 
@@ -109,33 +109,33 @@ public class AccountService {
     public void applyToAddFriend(@Valid ApplyToAddFriendCommand command) {
         Account applyAccount = accountMapper.selectByAccount(command.getTenantId(), command.getApplyAccount());
         Account account = accountMapper.selectByAccount(command.getTenantId(), command.getAccount());
-        if(!accountApplyFormMapper.exists(command.getTenantId(), applyAccount.getId(), account.getId())) {
-            AccountApplyForm form = new AccountApplyForm();
+        if(!friendApplyFormMapper.exists(command.getTenantId(), applyAccount.getId(), account.getId())) {
+            FriendApplyForm form = new FriendApplyForm();
             form.setTenantId(command.getTenantId());
             form.setApplyAccountId(applyAccount.getId());
             form.setAccountId(account.getId());
-            form.setStatus(AccountApplyFormStatusEnum.Applied.getCode());
+            form.setStatus(FriendApplyFormStatusEnum.Applied.getCode());
             form.setCreateTime(LocalDateTime.now());
             form.setUpdateTime(LocalDateTime.now());
-            accountApplyFormMapper.insert(form);
+            friendApplyFormMapper.insert(form);
         }
     }
 
     @Transactional
-    public void updateAccountApplyFormStatus(UpdateAccountApplyFormStatusCommand command) {
+    public void updateFriendApplyFormStatus(UpdateFriendApplyFormStatusCommand command) {
         Account accountEntity = accountMapper.selectByAccount(command.getTenantId(), command.getAccount());
-        LambdaQueryWrapper<AccountApplyForm> queryWrapper = new LambdaQueryWrapper<>();
-        queryWrapper.eq(AccountApplyForm::getId, command.getAccountApplyFormId())
-                .eq(AccountApplyForm::getTenantId, command.getTenantId())
-                .eq(AccountApplyForm::getAccountId, accountEntity.getId())
-                .eq(AccountApplyForm::getStatus, AccountApplyFormStatusEnum.Applied.getCode())
-                .eq(AccountApplyForm::getDeleted, 0L);
-        AccountApplyForm form = accountApplyFormMapper.selectOne(queryWrapper);
+        LambdaQueryWrapper<FriendApplyForm> queryWrapper = new LambdaQueryWrapper<>();
+        queryWrapper.eq(FriendApplyForm::getId, command.getFriendApplyFormId())
+                .eq(FriendApplyForm::getTenantId, command.getTenantId())
+                .eq(FriendApplyForm::getAccountId, accountEntity.getId())
+                .eq(FriendApplyForm::getStatus, FriendApplyFormStatusEnum.Applied.getCode())
+                .eq(FriendApplyForm::getDeleted, 0L);
+        FriendApplyForm form = friendApplyFormMapper.selectOne(queryWrapper);
         if(form != null) {
             form.setStatus(command.getStatus().getCode());
             form.setUpdateTime(LocalDateTime.now());
-            accountApplyFormMapper.updateById(form);
-            if(command.getStatus() == AccountApplyFormStatusEnum.Agreed) {
+            friendApplyFormMapper.updateById(form);
+            if(command.getStatus() == FriendApplyFormStatusEnum.Agreed) {
                 Account toAccount = accountMapper.selectById(form.getApplyAccountId());
                 ControlMessage message = new ControlMessage();
                 message.setTenantId(command.getTenantId().toString());

@@ -3,11 +3,13 @@ package boluo.chat.rest.account;
 import boluo.chat.common.PageVo;
 import boluo.chat.common.ResVo;
 import boluo.chat.domain.Account;
-import boluo.chat.domain.AccountApplyFormStatusEnum;
+import boluo.chat.domain.FriendApplyForm;
+import boluo.chat.domain.FriendApplyFormStatusEnum;
 import boluo.chat.mapper.AccountMapper;
+import boluo.chat.mapper.FriendApplyFormMapper;
 import boluo.chat.service.account.AccountService;
 import boluo.chat.service.account.ApplyToAddFriendCommand;
-import boluo.chat.service.account.UpdateAccountApplyFormStatusCommand;
+import boluo.chat.service.account.UpdateFriendApplyFormStatusCommand;
 import cn.hutool.core.util.StrUtil;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
@@ -24,6 +26,8 @@ public class AccountRest {
     private AccountMapper accountMapper;
     @Resource
     private AccountService accountService;
+    @Resource
+    private FriendApplyFormMapper friendApplyFormMapper;
 
     /**
      *  账户
@@ -79,7 +83,7 @@ public class AccountRest {
     /**
      * 申请
      * */
-    @PostMapping(value = "/Tenants/{tenantId}/Accounts/{account}/AccountApplyForm")
+    @PostMapping(value = "/Tenants/{tenantId}/Accounts/{account}/FriendApplyForms")
     public ResVo<?> applyToAddFriend(@PathVariable("tenantId") Long tenantId, @PathVariable("account") String account, @Valid @RequestBody ApplyToAddFriendReq req) {
         ApplyToAddFriendCommand command = new ApplyToAddFriendCommand();
         command.setAccount(req.getAccount());
@@ -90,15 +94,26 @@ public class AccountRest {
         return ResVo.success();
     }
 
-    @PutMapping(value = "/Tenants/{tenantId}/Accounts/{account}/AccountApplyForm/{accountApplyFormId}")
-    public ResVo<?> updateAccountApplyFormStatus(@PathVariable("tenantId") Long tenantId, @PathVariable("account") String account,
-                                                 @PathVariable("accountApplyFormId") Long accountApplyFormId, @Valid @RequestBody UpdateAccountApplyFormStatusReq req) {
-        UpdateAccountApplyFormStatusCommand command = new UpdateAccountApplyFormStatusCommand();
+    @PutMapping(value = "/Tenants/{tenantId}/Accounts/{account}/FriendApplyForms/{friendApplyFormId}")
+    public ResVo<?> updateFriendApplyFormStatus(@PathVariable("tenantId") Long tenantId, @PathVariable("account") String account,
+                                                 @PathVariable("friendApplyFormId") Long friendApplyFormId, @Valid @RequestBody UpdateFriendApplyFormStatusReq req) {
+        UpdateFriendApplyFormStatusCommand command = new UpdateFriendApplyFormStatusCommand();
         command.setTenantId(tenantId);
-        command.setAccountApplyFormId(accountApplyFormId);
-        command.setStatus(AccountApplyFormStatusEnum.findByCode(req.getStatus()));
+        command.setFriendApplyFormId(friendApplyFormId);
+        command.setStatus(FriendApplyFormStatusEnum.findByCode(req.getStatus()));
         command.setAccount(account);
-        accountService.updateAccountApplyFormStatus(command);
+        accountService.updateFriendApplyFormStatus(command);
+        return ResVo.success();
+    }
+
+    @GetMapping("/Tenants/{tenantId}/Accounts/{account}/FriendApplyForms")
+    public ResVo<?> findFriendApplyForms(@PathVariable("tenantId") Long tenantId, @PathVariable("account") String account, FindFriendApplyFormsReq req) {
+        Account accountEntity = accountMapper.selectByAccount(tenantId, account);
+        LambdaQueryWrapper<FriendApplyForm> queryWrapper = new LambdaQueryWrapper<>();
+        queryWrapper.eq(FriendApplyForm::getTenantId, tenantId)
+                .eq(req.getType() == 1, FriendApplyForm::getApplyAccountId, accountEntity.getId())
+                .eq(req.getType() == 2, FriendApplyForm::getAccountId, accountEntity.getId())
+                .eq(FriendApplyForm::getDeleted, 0L).orderByDesc(FriendApplyForm::getId);
         return ResVo.success();
     }
 

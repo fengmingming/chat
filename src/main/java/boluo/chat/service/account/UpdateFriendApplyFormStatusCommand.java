@@ -1,6 +1,6 @@
 package boluo.chat.service.account;
 
-import boluo.chat.domain.AccountApplyFormStatusEnum;
+import boluo.chat.domain.FriendApplyFormStatusEnum;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import lombok.Getter;
@@ -8,7 +8,7 @@ import lombok.Setter;
 
 @Setter
 @Getter
-public class UpdateAccountApplyFormStatusCommand {
+public class UpdateFriendApplyFormStatusCommand {
 
     @NotNull(message = "tenantId is null")
     private Long tenantId;
@@ -20,9 +20,10 @@ public class UpdateAccountApplyFormStatusCommand {
     /**
      * 申请id
      * */
-    @NotNull(message = "accountApplyFormId is null")
-    private Long accountApplyFormId;
+    @NotNull(message = "friendApplyFormId is null")
+    private Long friendApplyFormId;
+
     @NotNull(message = "status is null")
-    private AccountApplyFormStatusEnum status;
+    private FriendApplyFormStatusEnum status;
 
 }
