@@ -7,8 +7,12 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.MediaType;
+import org.springframework.validation.Errors;
+import org.springframework.validation.FieldError;
 import org.springframework.web.servlet.HandlerExceptionResolver;
 import org.springframework.web.servlet.ModelAndView;
+
+import java.util.stream.Collectors;
 
 @Slf4j
 public class DefaultExceptionResolver implements HandlerExceptionResolver {
@@ -18,26 +22,30 @@ public class DefaultExceptionResolver implements HandlerExceptionResolver {
         log.error(ex.getMessage(), ex);
         res.setContentType(MediaType.APPLICATION_JSON_UTF8_VALUE);
         if(ex instanceof ImValidTokenException) {
-            try{
-                res.setStatus(401);
-                res.getWriter().write(JSONUtil.toJsonStr(ResVo.error(401, ex.getMessage())));
-            }catch (Throwable e) {
-                //ignore error
-            }
+            res.setStatus(401);
+            write(res, JSONUtil.toJsonStr(ResVo.error(401, ex.getMessage())));
         }else if(ex instanceof CodedException ce) {
-            try{
-                res.getWriter().write(JSONUtil.toJsonStr(ResVo.error(ce.getCode(), ce.getMessage())));
-            }catch (Throwable e) {
-                //ignore error
-            }
+            write(res, JSONUtil.toJsonStr(ResVo.error(ce.getCode(), ce.getMessage())));
+        }else if(ex instanceof Errors errors) {
+            write(res, JSONUtil.toJsonStr(ResVo.error(400, errors.getAllErrors().stream().map(it -> {
+                if(it instanceof FieldError fe) {
+                    return fe.getField() + ": " + fe.getDefaultMessage();
+                }else {
+                    return it.getObjectName() + ": " + it.getDefaultMessage();
+                }
+            }).collect(Collectors.joining(";")))));
         }else {
-            try{
-                res.getWriter().write(JSONUtil.toJsonStr(ResVo.error(ex.getMessage())));
-            }catch (Throwable e) {
-                //ignore error
-            }
+            write(res, JSONUtil.toJsonStr(ResVo.error(ex.getMessage())));
         }
         return new ModelAndView();
+    }
+
+    public void write(HttpServletResponse res, String message) {
+        try{
+            res.getWriter().write(message);
+        }catch (Throwable e) {
+            //ignore error
+        }
     }
 
 }

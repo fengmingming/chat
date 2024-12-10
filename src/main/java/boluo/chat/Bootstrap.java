@@ -1,7 +1,7 @@
 package boluo.chat;
 
 import boluo.chat.exception.DefaultExceptionResolver;
-import boluo.chat.filter.ValidTokenFilter;
+import boluo.chat.common.ValidTokenFilter;
 import org.mybatis.spring.annotation.MapperScan;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;

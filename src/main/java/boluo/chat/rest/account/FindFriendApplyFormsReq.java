@@ -1,6 +1,7 @@
 package boluo.chat.rest.account;
 
-import jakarta.validation.constraints.Pattern;
+import boluo.chat.common.validation.IntEnum;
+import jakarta.validation.constraints.NotNull;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -9,7 +10,8 @@ import lombok.Setter;
 public class FindFriendApplyFormsReq {
 
     // 1我的申请 2我接收的申请
-    @Pattern(regexp = "^[12]$", message = "illegal type")
-    private int type = 1;
+    @NotNull
+    @IntEnum(value = {1, 2}, message = "illegal type")
+    private Integer type;
 
 }

@@ -50,6 +50,7 @@ public class Tenant {
      * 签名密钥，用于签名
      * */
     @TableField(value = "sign_secret")
+    @JsonIgnore
     private String signSecret;
     /**
      * 超时时间
@@ -60,11 +61,13 @@ public class Tenant {
      * 公钥，用于加解密
      * */
     @TableField(value = "public_key")
+    @JsonIgnore
     public String publicKey;
     /**
      * 私钥，用于加解密
      * */
     @TableField(value = "private_key")
+    @JsonIgnore
     public String privateKey;
     /**
      * 状态

@@ -1,6 +1,5 @@
-package boluo.chat.filter;
+package boluo.chat.common;
 
-import boluo.chat.common.*;
 import boluo.chat.config.ChatProperties;
 import cn.hutool.core.util.StrUtil;
 import cn.hutool.json.JSONObject;

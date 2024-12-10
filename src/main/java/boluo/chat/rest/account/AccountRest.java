@@ -2,6 +2,7 @@ package boluo.chat.rest.account;
 
 import boluo.chat.common.PageVo;
 import boluo.chat.common.ResVo;
+import boluo.chat.common.Session;
 import boluo.chat.domain.Account;
 import boluo.chat.domain.FriendApplyForm;
 import boluo.chat.domain.FriendApplyFormStatusEnum;
@@ -10,6 +11,7 @@ import boluo.chat.mapper.FriendApplyFormMapper;
 import boluo.chat.service.account.AccountService;
 import boluo.chat.service.account.ApplyToAddFriendCommand;
 import boluo.chat.service.account.UpdateFriendApplyFormStatusCommand;
+import cn.hutool.core.collection.CollectionUtil;
 import cn.hutool.core.util.StrUtil;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
@@ -17,6 +19,12 @@ import jakarta.annotation.Resource;
 import jakarta.validation.Valid;
 import lombok.Setter;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.Collection;
+import java.util.List;
+import java.util.Map;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 
 @Setter
 @RestController
@@ -76,6 +84,9 @@ public class AccountRest {
      * */
     @PostMapping(value = "/Tenants/{tenantId}/Accounts/{account}", params = "action=addFriend")
     public ResVo<?> addFriend(@PathVariable("tenantId") Long tenantId, @PathVariable("account") String account, @RequestBody AddFriendReq req) {
+        if(!Session.currentSession().isTenant()) {
+            return ResVo.error(403);
+        }
         accountService.addFriend(tenantId, account, req);
         return ResVo.success();
     }
@@ -94,6 +105,9 @@ public class AccountRest {
         return ResVo.success();
     }
 
+    /**
+     * 审核好友申请
+     * */
     @PutMapping(value = "/Tenants/{tenantId}/Accounts/{account}/FriendApplyForms/{friendApplyFormId}")
     public ResVo<?> updateFriendApplyFormStatus(@PathVariable("tenantId") Long tenantId, @PathVariable("account") String account,
                                                  @PathVariable("friendApplyFormId") Long friendApplyFormId, @Valid @RequestBody UpdateFriendApplyFormStatusReq req) {
@@ -106,6 +120,9 @@ public class AccountRest {
         return ResVo.success();
     }
 
+    /**
+     * 查询加好友申请
+     * */
     @GetMapping("/Tenants/{tenantId}/Accounts/{account}/FriendApplyForms")
     public ResVo<?> findFriendApplyForms(@PathVariable("tenantId") Long tenantId, @PathVariable("account") String account, FindFriendApplyFormsReq req) {
         Account accountEntity = accountMapper.selectByAccount(tenantId, account);
@@ -114,7 +131,21 @@ public class AccountRest {
                 .eq(req.getType() == 1, FriendApplyForm::getApplyAccountId, accountEntity.getId())
                 .eq(req.getType() == 2, FriendApplyForm::getAccountId, accountEntity.getId())
                 .eq(FriendApplyForm::getDeleted, 0L).orderByDesc(FriendApplyForm::getId);
-        return ResVo.success();
+        List<FriendApplyForm> forms = friendApplyFormMapper.selectList(queryWrapper);
+        Collection<Long> accountIds = CollectionUtil.union(forms.stream().map(FriendApplyForm::getAccountId).toList(), forms.stream().map(FriendApplyForm::getApplyAccountId).toList());
+        Map<Long, Account> accountEntities = accountMapper.selectByIds(accountIds).stream().collect(Collectors.toMap(Account::getId, Function.identity()));
+        return ResVo.success(forms.stream().map(it -> {
+            Account friendAccount = accountEntities.get(it.getAccountId());
+            Account applyAccount = accountEntities.get(it.getApplyAccountId());
+            FindFriendApplyFormsRes res = new FindFriendApplyFormsRes();
+            res.setId(it.getId());
+            res.setTenantId(it.getTenantId());
+            res.setAccount(friendAccount);
+            res.setApplyAccount(applyAccount);
+            res.setStatus(it.getStatus());
+            res.setCreateTime(it.getCreateTime());
+            return res;
+        }).toList());
     }
 
     /**

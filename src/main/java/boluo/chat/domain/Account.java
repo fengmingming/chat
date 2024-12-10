@@ -17,6 +17,7 @@ import java.time.LocalDateTime;
 public class Account {
 
     @TableId(value = "id", type = IdType.ASSIGN_ID)
+    @JsonIgnore
     private Long id;
     @TableField(value = "tenant_id")
     private Long tenantId;

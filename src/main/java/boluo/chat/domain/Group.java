@@ -5,6 +5,7 @@ import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
 import com.fasterxml.jackson.annotation.JsonFormat;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -12,12 +13,13 @@ import java.time.LocalDateTime;
 
 @Setter
 @Getter
-@TableName("group")
+@TableName("`group`")
 public class Group {
 
-    @TableId(value = "groupId", type = IdType.ASSIGN_ID)
+    @TableId(value = "id", type = IdType.ASSIGN_ID)
+    @JsonIgnore
     private Long id;
-    @TableField(value = "groupId")
+    @TableField(value = "group_id")
     private String groupId;
     @TableField(value = "tenant_id")
     private Long tenantId;

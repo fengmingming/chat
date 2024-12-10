@@ -16,6 +16,8 @@ public class CreateGroupCommand {
     private String groupId;
     @Size(max = 100)
     private String groupName;
+    @NotBlank(message = "managerAccount is blank")
+    private String managerAccount;
     @Size(max = 100)
     private List<String> accounts;
 

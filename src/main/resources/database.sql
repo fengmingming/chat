@@ -13,15 +13,15 @@ CREATE TABLE chat.`account` (
 
 CREATE TABLE chat.`group` (
   `id` BIGINT NOT NULL,
-  `groupId` VARCHAR(100) NOT NULL comment '组id',
   `tenant_id` BIGINT not null comment '租户id',
+  `group_id` VARCHAR(100) NOT NULL comment '组id',
   `group_name` VARCHAR(100) not null comment '组名称',
   `state` INT not null comment '组状态',
   `deleted` BIGINT not null default 0 comment '删除状态',
   `create_time` DATETIME not null comment '创建时间',
   `update_time` DATETIME null comment '修改时间',
   PRIMARY KEY (`groupId`),
-  key tenant (tenant_id)
+  unique key tenant_group (tenant_id, group_id, deleted)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 comment='群组';
 
 CREATE TABLE chat.`group_member` (
@@ -43,7 +43,7 @@ CREATE TABLE chat.`message` (
   `to` VARCHAR(100) not null comment '消息接收账号',
   `msg_type` VARCHAR(10) not null comment '消息类型',
   `message` TEXT null comment '消息内容',
-  `timestamp` timestamp not null comment '时间戳',
+  `timestamp` bigint not null comment '时间戳',
   primary key (msg_id),
   key tenant_to (tenant_id, `to`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 comment='消息';

@@ -60,6 +60,8 @@ public class GroupService {
         group.setUpdateTime(LocalDateTime.now());
         groupMapper.insert(group);
         addGroupMembers(tenantId, group.getId(), command.getAccounts());
+        Account managerAccount = accountMapper.selectByAccount(tenantId, command.getManagerAccount());
+        doUpdateGroupMemberRole(tenantId, group.getId(), managerAccount.getId(), GroupMemberRoleEnum.admin);
         return group;
     }
 
@@ -89,12 +91,21 @@ public class GroupService {
                         gm.setTenantId(tenantId);
                         gm.setGroupId(groupId);
                         gm.setAccountId(it.getId());
+                        gm.setRole(GroupMemberRoleEnum.member.name());
                         gm.setDeleted(0L);
                         gm.setCreateTime(LocalDateTime.now());
                         return gm;
                     }).toList();
             groupMemberMapper.insert(gms);
         }
+    }
+
+    private void doUpdateGroupMemberRole(Long tenantId, Long groupId, Long accountId, GroupMemberRoleEnum role) {
+        LambdaQueryWrapper<GroupMember> queryWrapper = new LambdaQueryWrapper<>();
+        queryWrapper.eq(GroupMember::getTenantId, tenantId).eq(GroupMember::getGroupId, groupId).eq(GroupMember::getAccountId, accountId).eq(GroupMember::getDeleted, 0L);
+        GroupMember gm = groupMemberMapper.selectOne(queryWrapper);
+        gm.setRole(role.name());
+        groupMemberMapper.updateById(gm);
     }
 
     @Transactional

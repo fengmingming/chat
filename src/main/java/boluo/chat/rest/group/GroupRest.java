@@ -1,6 +1,7 @@
 package boluo.chat.rest.group;
 
 import boluo.chat.common.ResVo;
+import boluo.chat.common.Session;
 import boluo.chat.domain.*;
 import boluo.chat.mapper.AccountMapper;
 import boluo.chat.mapper.GroupApplyFormMapper;
@@ -72,6 +73,9 @@ public class GroupRest {
      * */
     @PostMapping(value = "/Tenants/{tenantId}/Groups/{groupId}", params = "action=joinGroup")
     public ResVo<?> joinGroup(@PathVariable("tenantId") Long tenantId, @PathVariable("groupId") String groupId, @RequestBody JoinGroupReq req) {
+        if(!Session.currentSession().isTenant()){
+            return ResVo.error(403);
+        }
         groupService.joinGroup(tenantId, groupId, req);
         return ResVo.success();
     }
@@ -111,6 +115,9 @@ public class GroupRest {
         }
     }
 
+    /**
+     * 审核申请
+     * */
     @PutMapping("/Tenants/{tenantId}/Groups/{groupId}/GroupApplyForms/{groupApplyFormId}")
     public ResVo<?> updateGroupApplyFormStatus(@PathVariable("tenantId") Long tenantId, @PathVariable("groupId") String groupId,
                                                @PathVariable("groupApplyFormId") Long groupApplyFormId, @Valid @RequestBody UpdateGroupApplyFormStatusReq req) {

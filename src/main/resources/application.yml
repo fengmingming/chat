@@ -26,3 +26,7 @@ boluo:
       - POST:/Tenants/Login
       - POST:/Tenants/{tenantId}/Accounts/Login
       - GET:/validToken
+
+logging:
+  level:
+    boluo: debug

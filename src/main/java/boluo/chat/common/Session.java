@@ -13,11 +13,11 @@ public class Session {
         return cache.get();
     }
 
-    public static void saveSession(Session session) {
+    static void saveSession(Session session) {
         cache.set(session);
     }
 
-    public static void clearSession() {
+    static void clearSession() {
         cache.remove();
     }
 

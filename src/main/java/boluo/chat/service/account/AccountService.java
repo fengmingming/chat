@@ -15,6 +15,7 @@ import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import lombok.Setter;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.validation.annotation.Validated;
@@ -25,6 +26,7 @@ import java.util.ArrayList;
 @Service
 @Setter
 @Validated
+@Slf4j
 public class AccountService {
 
     @Resource
@@ -72,16 +74,20 @@ public class AccountService {
     public void addFriend(@NotNull Long tenantId, @NotBlank String account, @Valid AddFriendCommand command) {
         Account fromAccount = accountMapper.selectByAccount(tenantId, account);
         Account friendAccount = accountMapper.selectByAccount(tenantId, command.getFriendAccount());
+        doAddFriend(tenantId, fromAccount.getId(), friendAccount.getId());
+    }
+
+    protected void doAddFriend(Long tenantId, Long accountId, Long friendAccountId) {
         LambdaQueryWrapper<Relationship> queryWrapper = new LambdaQueryWrapper<>();
         queryWrapper.eq(Relationship::getTenantId, tenantId);
-        queryWrapper.eq(Relationship::getAccountId, fromAccount.getId());
-        queryWrapper.eq(Relationship::getFriendId, friendAccount.getId());
+        queryWrapper.eq(Relationship::getAccountId, accountId);
+        queryWrapper.eq(Relationship::getFriendId, friendAccountId);
         queryWrapper.eq(Relationship::getDeleted, 0L);
         if(!relationshipMapper.exists(queryWrapper)) {
             Relationship relationship = new Relationship();
             relationship.setTenantId(tenantId);
-            relationship.setAccountId(fromAccount.getId());
-            relationship.setFriendId(friendAccount.getId());
+            relationship.setAccountId(accountId);
+            relationship.setFriendId(friendAccountId);
             relationship.setState(RelationshipStateEnum.NORMAL.getCode());
             relationship.setCreateTime(LocalDateTime.now());
             relationship.setUpdateTime(LocalDateTime.now());
@@ -136,6 +142,7 @@ public class AccountService {
             form.setUpdateTime(LocalDateTime.now());
             friendApplyFormMapper.updateById(form);
             if(command.getStatus() == FriendApplyFormStatusEnum.Agreed) {
+                doAddFriend(form.getTenantId(), form.getAccountId(), form.getApplyAccountId());
                 Account toAccount = accountMapper.selectById(form.getApplyAccountId());
                 ControlMessage message = new ControlMessage();
                 message.setTenantId(command.getTenantId().toString());
@@ -143,6 +150,7 @@ public class AccountService {
                 message.setTo(toAccount.getAccount());
                 message.setCommand(ControlMessage.REVIEW_FRIEND_REQUEST_NOTIFICATION);
                 message.setArgs(new ArrayList<>());
+                log.info("调用record");
                 TransactionalTool.afterCommit(() -> {
                     messageService.recordAndSendMessage(message);
                 });
