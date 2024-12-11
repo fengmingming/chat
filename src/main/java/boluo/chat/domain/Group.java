@@ -1,11 +1,13 @@
 package boluo.chat.domain;
 
+import boluo.chat.common.StringSerializer;
 import com.baomidou.mybatisplus.annotation.IdType;
 import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
 import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -22,6 +24,7 @@ public class Group {
     @TableField(value = "group_id")
     private String groupId;
     @TableField(value = "tenant_id")
+    @JsonSerialize(using = StringSerializer.class)
     private Long tenantId;
     @TableField(value = "group_name")
     private String groupName;

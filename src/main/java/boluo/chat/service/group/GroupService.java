@@ -11,13 +11,13 @@ import boluo.chat.message.ControlMessage;
 import boluo.chat.rest.group.JoinGroupCommand;
 import boluo.chat.rest.group.LeaveGroupCommand;
 import boluo.chat.service.message.MessageService;
-import cn.hutool.core.map.MapUtil;
 import cn.hutool.core.util.StrUtil;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
 import jakarta.annotation.Resource;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotNull;
+import lombok.Setter;
 import org.redisson.api.RedissonClient;
 import org.springframework.expression.common.TemplateParserContext;
 import org.springframework.expression.spel.standard.SpelExpressionParser;
@@ -31,6 +31,7 @@ import java.util.List;
 
 @Service
 @Validated
+@Setter
 public class GroupService {
 
     @Resource
@@ -161,7 +162,7 @@ public class GroupService {
                 if(StrUtil.isNotBlank(chatProperties.getGroupKeyTemplate())) {
                     SpelExpressionParser parser = new SpelExpressionParser();
                     TemplateParserContext context = new TemplateParserContext("{", "}");
-                    String redisKey = parser.parseExpression(chatProperties.getGroupKeyTemplate(), context).getValue(MapUtil.builder().build(), String.class);
+                    String redisKey = parser.parseExpression(chatProperties.getGroupKeyTemplate(), context).getValue(group, String.class);
                     redissonClient.getBucket(redisKey).delete();
                 }
                 Account account = accountMapper.selectById(form.getAccountId());

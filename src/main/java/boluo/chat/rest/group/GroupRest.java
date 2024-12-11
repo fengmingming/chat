@@ -15,7 +15,11 @@ import jakarta.validation.Valid;
 import lombok.Setter;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 
 @Setter
 @RestController
@@ -85,6 +89,8 @@ public class GroupRest {
      * */
     @PostMapping(value = "/Tenants/{tenantId}/Groups/{groupId}", params = "action=applyToJoinGroup")
     public ResVo<?> applyToJoinGroup(@PathVariable("tenantId") Long tenantId, @PathVariable("groupId") String groupId, @RequestBody ApplyToJoinGroupReq req) {
+        req.setTenantId(tenantId);
+        req.setGroupId(groupId);
         groupService.applyToJoinGroup(req);
         return ResVo.success();
     }
@@ -97,13 +103,14 @@ public class GroupRest {
         Group group = groupMapper.selectByGroupId(tenantId, groupId);
         Account account = accountMapper.selectByAccount(tenantId, req.getAccount());
         GroupMember gm = groupMemberMapper.selectByAccountId(tenantId, group.getId(), account.getId());
+        List<GroupApplyForm> forms = null;
         if(gm != null && GroupMemberRoleEnum.valueOf(gm.getRole()) == GroupMemberRoleEnum.admin) {
             //群主
             LambdaQueryWrapper<GroupApplyForm> queryWrapper = new LambdaQueryWrapper<>();
             queryWrapper.eq(GroupApplyForm::getTenantId, tenantId).eq(GroupApplyForm::getGroupId, group.getId()).eq(GroupApplyForm::getDeleted, 0L);
             queryWrapper.eq(req.getStatus() != null, GroupApplyForm::getStatus, req.getStatus());
             queryWrapper.orderByDesc(GroupApplyForm::getId);
-            return ResVo.success(groupApplyFormMapper.selectList(queryWrapper));
+            forms = groupApplyFormMapper.selectList(queryWrapper);
         }else {
             //个人
             LambdaQueryWrapper<GroupApplyForm> queryWrapper = new LambdaQueryWrapper<>();
@@ -111,8 +118,21 @@ public class GroupRest {
             queryWrapper.eq(GroupApplyForm::getAccountId, account.getId());
             queryWrapper.eq(req.getStatus() != null, GroupApplyForm::getStatus, req.getStatus());
             queryWrapper.orderByDesc(GroupApplyForm::getId);
-            return ResVo.success(groupApplyFormMapper.selectList(queryWrapper));
+            forms = groupApplyFormMapper.selectList(queryWrapper);
         }
+        Map<Long, Account> accountMap = new HashMap<>();
+        List<Long> accountIds = forms.stream().map(GroupApplyForm::getAccountId).toList();
+        if(!accountIds.isEmpty()) {
+            accountMap.putAll(accountMapper.selectByIds(accountIds).stream().collect(Collectors.toMap(Account::getId, Function.identity())));
+        }
+        return ResVo.success(forms.stream().map(form -> {
+            FindGroupApplyFormsRes res = new FindGroupApplyFormsRes();
+            res.setId(form.getId());
+            res.setAccount(accountMap.get(form.getAccountId()));
+            res.setStatus(form.getStatus());
+            res.setCreateTime(form.getCreateTime());
+            return res;
+        }).toList());
     }
 
     /**
@@ -136,9 +156,10 @@ public class GroupRest {
      * */
     @GetMapping("/Tenants/{tenantId}/Groups/{groupId}/Members")
     public ResVo<?> findGroupMembers(@PathVariable("tenantId") Long tenantId, @PathVariable("groupId") String groupId) {
+        Group group = groupMapper.selectByGroupId(tenantId, groupId);
         LambdaQueryWrapper<GroupMember> queryWrapper = new LambdaQueryWrapper<>();
         queryWrapper.eq(GroupMember::getTenantId, tenantId);
-        queryWrapper.eq(GroupMember::getGroupId, groupId);
+        queryWrapper.eq(GroupMember::getGroupId, group.getId());
         queryWrapper.eq(GroupMember::getDeleted, 0L);
         List<GroupMember> gms = groupMemberMapper.selectList(queryWrapper);
         if(!gms.isEmpty()) {

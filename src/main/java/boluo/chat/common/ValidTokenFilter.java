@@ -16,6 +16,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.redisson.api.RBucket;
 import org.redisson.api.RedissonClient;
 import org.springframework.http.HttpMethod;
+import org.springframework.http.MediaType;
 import org.springframework.util.AntPathMatcher;
 import org.springframework.web.filter.OncePerRequestFilter;
 
@@ -46,6 +47,7 @@ public class ValidTokenFilter extends OncePerRequestFilter {
                 if(StrUtil.isNotBlank(token) && validToken(token)) {
                     chain.doFilter(req, res);
                 }else {
+                    res.setContentType(MediaType.APPLICATION_JSON_UTF8_VALUE);
                     res.getWriter().write(JSONUtil.toJsonStr(ResVo.error(401, "Unauthorized")));
                 }
             }finally {
