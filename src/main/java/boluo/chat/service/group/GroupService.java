@@ -125,7 +125,7 @@ public class GroupService {
             LambdaUpdateWrapper<GroupMember> updateWrapper = new LambdaUpdateWrapper<>();
             updateWrapper.set(GroupMember::getDeleted, System.currentTimeMillis());
             updateWrapper.eq(GroupMember::getTenantId, tenantId);
-            updateWrapper.eq(GroupMember::getGroupId, groupId);
+            updateWrapper.eq(GroupMember::getGroupId, group.getId());
             updateWrapper.in(GroupMember::getAccountId, accountIds);
             groupMemberMapper.update(updateWrapper);
         }
