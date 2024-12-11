@@ -2,9 +2,11 @@ package boluo.chat.rest.login;
 
 import boluo.chat.common.*;
 import boluo.chat.domain.Account;
+import boluo.chat.domain.Manager;
 import boluo.chat.domain.Tenant;
 import boluo.chat.exception.ImValidTokenException;
 import boluo.chat.mapper.AccountMapper;
+import boluo.chat.mapper.ManagerMapper;
 import boluo.chat.mapper.TenantMapper;
 import boluo.chat.service.login.LoginService;
 import cn.hutool.core.map.MapUtil;
@@ -13,6 +15,7 @@ import cn.hutool.json.JSONObject;
 import cn.hutool.json.JSONUtil;
 import cn.hutool.jwt.JWTPayload;
 import cn.hutool.jwt.JWTUtil;
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import jakarta.annotation.Resource;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
@@ -36,6 +39,22 @@ public class LoginRest {
     private LoginService loginService;
     @Resource
     private RedissonClient redissonClient;
+    @Resource
+    private ManagerMapper managerMapper;
+
+    @PostMapping("/Managers/Login")
+    public ResVo<?> managerLogin(@RequestBody @Valid ManagerLoginReq req) {
+        LambdaQueryWrapper<Manager> queryWrapper = new LambdaQueryWrapper<>();
+        queryWrapper.eq(Manager::getUsername, req.getUsername());
+        Manager manager = managerMapper.selectOne(queryWrapper);
+        if(manager == null || !BCrypt.checkpw(req.getPassword(), manager.getPassword()) || manager.getState() == 0) {
+            return ResVo.error("用户名或密码错误或被禁用");
+        }
+        String token = loginService.createToken(manager);
+        return ResVo.success(MapUtil.builder()
+                .put("token", token).put("manager", manager)
+                .build());
+    }
 
     @PostMapping("/Tenants/Login")
     public ResVo<?> tenantLogin(@RequestBody @Valid TenantLoginReq req) {
@@ -64,7 +83,6 @@ public class LoginRest {
     @GetMapping("/validToken")
     public void validToken(@RequestParam("tenantId") Long tenantId, @RequestParam("account") String account, @RequestParam("token") String token, HttpServletResponse res) {
         try {
-            //res.setContentType(MediaType.APPLICATION_JSON_UTF8_VALUE);
             JWTPayload jwtPayload = JWTUtil.parseToken(token).getPayload();
             JSONObject payload = jwtPayload.getClaimsJson();
             SessionRoleEnum role = SessionRoleEnum.valueOf(payload.getStr("role"));

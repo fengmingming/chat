@@ -18,5 +18,7 @@ public class ChatProperties {
     private String imAddress;
     private String groupKeyTemplate;
     private List<String> ignoreUrls = List.of();
+    private String manageSignSecret;
+    private Integer timeout = 30;
 
 }

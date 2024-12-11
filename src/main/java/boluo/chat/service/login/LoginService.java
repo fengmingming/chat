@@ -1,7 +1,9 @@
 package boluo.chat.service.login;
 
 import boluo.chat.common.*;
+import boluo.chat.config.ChatProperties;
 import boluo.chat.domain.Account;
+import boluo.chat.domain.Manager;
 import boluo.chat.domain.Tenant;
 import boluo.chat.mapper.TenantMapper;
 import cn.hutool.core.map.MapUtil;
@@ -22,9 +24,23 @@ import java.util.List;
 public class LoginService {
 
     @Resource
+    private ChatProperties chatProperties;
+    @Resource
     private RedissonClient redissonClient;
     @Resource
     private TenantMapper tenantMapper;
+
+    public String createToken(Manager manager) {
+        ManagerSession session = new ManagerSession();
+        session.setRole(SessionRoleEnum.Manager);
+        String token = JWTUtil.createToken(MapUtil.builder("managerId", (Object) manager.getId())
+                .put("role", session.getRole().name())
+                .put("expire", System.currentTimeMillis() + (chatProperties.getTimeout() * 60 * 60 * 1000))
+                .build(), chatProperties.getManageSignSecret().getBytes(StandardCharsets.UTF_8));
+        RBucket<ManagerSession> bucket = redissonClient.getBucket(RedisKeyTool.tenantTokenRedisKey(manager.getId()));
+        bucket.set(session, Duration.ofHours(chatProperties.getTimeout()));
+        return token;
+    }
 
     public String createToken(Tenant tenant) {
         TenantSession session = new TenantSession();

@@ -10,6 +10,10 @@ public class RedisKeyTool {
         return "boluo:chat:token:tenant:"+tenantId;
     }
 
+    public static String managerTokenRedisKey(Long managerId) {
+        return "boluo:chat:token:manager:"+managerId;
+    }
+
     public static String groupMemberRedisKey(Long tenantId, String groupId) {
         return String.format("boluo:chat:tenant:%d:group:%s:members", tenantId, groupId);
     }

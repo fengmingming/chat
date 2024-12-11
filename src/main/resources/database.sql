@@ -105,3 +105,16 @@ create table chat.friend_apply_form (
     key apply_account_id (apply_account_id)
 )engine=INNODB default charset=utf8mb4 comment='加好友申请表';
 
+create table chat.manager (
+    id bigint not null comment '主键',
+    username varchar(100) not null comment '用户名',
+    password varchar(100) not null comment '密码',
+    phone varchar(11) not null comment '手机号',
+    state int not null default 0 comment '0禁用，1正常',
+    create_time datetime not null comment '创建时间',
+    update_time datetime not null comment '修改时间',
+    last_login_time datetime null comment '最后登录时间',
+    primary key (id),
+    unique key (username)
+)engine=INNODB default charset=utf8mb4 comment='管理人员表';
+
