@@ -32,7 +32,9 @@ public class LoginService {
 
     public String createToken(Manager manager) {
         ManagerSession session = new ManagerSession();
+        session.setManagerId(manager.getId());
         session.setRole(SessionRoleEnum.Manager);
+        session.setSignSecret(chatProperties.getManageSignSecret());
         String token = JWTUtil.createToken(MapUtil.builder("managerId", (Object) manager.getId())
                 .put("role", session.getRole().name())
                 .put("expire", System.currentTimeMillis() + (chatProperties.getTimeout() * 60 * 60 * 1000))

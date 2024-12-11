@@ -2,6 +2,7 @@ package boluo.chat.rest.tenant;
 
 import boluo.chat.common.PageVo;
 import boluo.chat.common.ResVo;
+import boluo.chat.common.Session;
 import boluo.chat.domain.Tenant;
 import boluo.chat.mapper.TenantMapper;
 import boluo.chat.service.tenant.TenantService;
@@ -38,6 +39,12 @@ public class TenantRest {
      * */
     @PutMapping("/Tenants/{tenantId}")
     public ResVo<?> updateTenant(@PathVariable Long tenantId, @Valid @RequestBody UpdateTenantReq req) {
+        Session session = Session.currentSession();
+        if(session.isAccount()) {
+            return ResVo.error(403);
+        }
+        session.verifyTenantIdAndThrowException(tenantId);
+
         tenantService.updateTenant(tenantId, req);
         return ResVo.success();
     }
@@ -47,6 +54,9 @@ public class TenantRest {
      * */
     @GetMapping("/Tenants")
     public ResVo<?> findTenants(FindTenantsReq req) {
+        if(!Session.currentSession().isManager()) {
+            return ResVo.error(403);
+        }
         LambdaQueryWrapper<Tenant> queryWrapper = new LambdaQueryWrapper<>();
         queryWrapper.eq(StrUtil.isNotBlank(req.getPhone()), Tenant::getPhone, req.getPhone());
         queryWrapper.like(StrUtil.isNotBlank(req.getTenantName()), Tenant::getTenantName, req.getTenantName());
@@ -60,6 +70,7 @@ public class TenantRest {
      * */
     @GetMapping("/Tenants/{tenantId}")
     public ResVo<?> findTenant(@PathVariable("tenantId") Long tenantId) {
+        Session.currentSession().verifyTenantIdAndThrowException(tenantId);
         return ResVo.success(tenantMapper.selectById(tenantId));
     }
 

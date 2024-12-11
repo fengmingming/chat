@@ -1,5 +1,6 @@
 package boluo.chat.service.account;
 
+import jakarta.validation.constraints.NotBlank;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -7,6 +8,7 @@ import lombok.Setter;
 @Getter
 public class AddFriendCommand {
 
+    @NotBlank(message = "friendAccount is blank")
     private String friendAccount;
 
 }

@@ -1,5 +1,6 @@
 package boluo.chat.rest.account;
 
+import boluo.chat.common.AccessValidator;
 import boluo.chat.common.PageVo;
 import boluo.chat.common.ResVo;
 import boluo.chat.common.Session;
@@ -36,12 +37,15 @@ public class AccountRest {
     private AccountService accountService;
     @Resource
     private FriendApplyFormMapper friendApplyFormMapper;
+    @Resource
+    private AccessValidator accessValidator;
 
     /**
-     *  账户
+     *  创建账户
      */
     @PostMapping("/Tenants/{tenantId}/Accounts")
     public ResVo<?> createAccount(@PathVariable("tenantId") Long tenantId, @Valid @RequestBody CreateAccountReq req) {
+        Session.currentSession().verifyTenantIdAndThrowException(tenantId);
         Account account = accountMapper.selectByAccount(tenantId, req.getAccount());
         if(account != null) {
             return ResVo.error("账号已存在");
@@ -55,6 +59,7 @@ public class AccountRest {
      * */
     @PutMapping("/Tenants/{tenantId}/Accounts/{account}")
     public ResVo<?> updateAccount(@PathVariable("tenantId") Long tenantId, @PathVariable("account") String account, @Valid @RequestBody UpdateAccountReq req) {
+        Session.currentSession().verifyTenantIdAndThrowException(tenantId).verifyAccountAndThrowException(account);
         accountService.updateAccount(tenantId, account, req);
         return ResVo.success();
     }
@@ -64,6 +69,11 @@ public class AccountRest {
      * */
     @GetMapping("/Tenants/{tenantId}/Accounts")
     public ResVo<?> findAccounts(@PathVariable("tenantId") Long tenantId, FindAccountsReq req) {
+        Session session = Session.currentSession();
+        if(session.isAccount()) {
+            return ResVo.error(403);
+        }
+        session.verifyTenantIdAndThrowException(tenantId);
         LambdaQueryWrapper<Account> queryWrapper = new LambdaQueryWrapper<>();
         queryWrapper.eq(Account::getTenantId, tenantId);
         queryWrapper.like(StrUtil.isNotBlank(req.getNickName()), Account::getNickName, req.getNickName());
@@ -76,6 +86,7 @@ public class AccountRest {
      * */
     @GetMapping("/Tenants/{tenantId}/Accounts/{account}")
     public ResVo<?> findAccounts(@PathVariable("tenantId") Long tenantId, @PathVariable("account") String account) {
+        Session.currentSession().verifyTenantIdAndThrowException(tenantId).verifyAccountAndThrowException(account);
         return ResVo.success(accountMapper.selectByAccount(tenantId, account));
     }
 
@@ -84,9 +95,13 @@ public class AccountRest {
      * */
     @PostMapping(value = "/Tenants/{tenantId}/Accounts/{account}", params = "action=addFriend")
     public ResVo<?> addFriend(@PathVariable("tenantId") Long tenantId, @PathVariable("account") String account, @RequestBody AddFriendReq req) {
-        if(!Session.currentSession().isTenant()) {
+        Session session = Session.currentSession();
+        if(!session.isTenant()) {
             return ResVo.error(403);
         }
+        session.verifyTenantIdAndThrowException(tenantId).verifyAccountAndThrowException(account);
+        accessValidator.verifyAccountAndThrowException(tenantId, req.getFriendAccount());
+
         accountService.addFriend(tenantId, account, req);
         return ResVo.success();
     }
@@ -96,6 +111,10 @@ public class AccountRest {
      * */
     @PostMapping(value = "/Tenants/{tenantId}/Accounts/{account}/FriendApplyForms")
     public ResVo<?> applyToAddFriend(@PathVariable("tenantId") Long tenantId, @PathVariable("account") String account, @Valid @RequestBody ApplyToAddFriendReq req) {
+        Session session = Session.currentSession();
+        session.verifyAccountAndThrowException(account).verifyTenantIdAndThrowException(tenantId);
+        accessValidator.verifyAccountAndThrowException(tenantId, req.getAccount());
+
         ApplyToAddFriendCommand command = new ApplyToAddFriendCommand();
         command.setAccount(req.getAccount());
         command.setApplyAccount(account);
@@ -111,6 +130,9 @@ public class AccountRest {
     @PutMapping(value = "/Tenants/{tenantId}/Accounts/{account}/FriendApplyForms/{friendApplyFormId}")
     public ResVo<?> updateFriendApplyFormStatus(@PathVariable("tenantId") Long tenantId, @PathVariable("account") String account,
                                                  @PathVariable("friendApplyFormId") Long friendApplyFormId, @Valid @RequestBody UpdateFriendApplyFormStatusReq req) {
+        Session session = Session.currentSession();
+        session.verifyTenantIdAndThrowException(tenantId).verifyAccountAndThrowException(account);
+
         UpdateFriendApplyFormStatusCommand command = new UpdateFriendApplyFormStatusCommand();
         command.setTenantId(tenantId);
         command.setFriendApplyFormId(friendApplyFormId);
@@ -125,6 +147,9 @@ public class AccountRest {
      * */
     @GetMapping("/Tenants/{tenantId}/Accounts/{account}/FriendApplyForms")
     public ResVo<?> findFriendApplyForms(@PathVariable("tenantId") Long tenantId, @PathVariable("account") String account, FindFriendApplyFormsReq req) {
+        Session session = Session.currentSession();
+        session.verifyTenantIdAndThrowException(tenantId).verifyAccountAndThrowException(account);
+
         Account accountEntity = accountMapper.selectByAccount(tenantId, account);
         LambdaQueryWrapper<FriendApplyForm> queryWrapper = new LambdaQueryWrapper<>();
         queryWrapper.eq(FriendApplyForm::getTenantId, tenantId)
@@ -153,6 +178,8 @@ public class AccountRest {
      * */
     @DeleteMapping(value = "/Tenants/{tenantId}/Accounts/{account}", params = "action=deleteFriend")
     public ResVo<?> deleteFriend(@PathVariable("tenantId") Long tenantId, @PathVariable("account") String account, @RequestBody DeleteFriendReq req) {
+        Session session = Session.currentSession();
+        session.verifyTenantIdAndThrowException(tenantId).verifyAccountAndThrowException(account);
         accountService.deleteFriend(tenantId, account, req);
         return ResVo.success();
     }

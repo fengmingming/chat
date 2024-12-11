@@ -1,6 +1,9 @@
 package boluo.chat.rest.message;
 
+import boluo.chat.common.AccessValidator;
+import boluo.chat.common.AccountSession;
 import boluo.chat.common.ResVo;
+import boluo.chat.common.Session;
 import boluo.chat.domain.MessageEntity;
 import boluo.chat.mapper.MessageMapper;
 import boluo.chat.message.Message;
@@ -26,6 +29,8 @@ public class MessageRest {
     private MessageMapper messageMapper;
     @Resource
     private ObjectMapper objectMapper;
+    @Resource
+    private AccessValidator accessValidator;
 
     /**
      * 发送消息
@@ -44,6 +49,7 @@ public class MessageRest {
      * */
     @GetMapping("/Tenants/{tenantId}/Accounts/{account}/Messages")
     public ResVo<?> findMessages(@PathVariable("tenantId") Long tenantId, @PathVariable("account") String account, FindMessagesReq req) {
+        Session.currentSession().verifyTenantIdAndThrowException(tenantId).verifyAccountAndThrowException(account);
         if(req.getPageSize() > 1000) {
             return ResVo.error("pageSize must be less than 1000");
         }
@@ -73,6 +79,14 @@ public class MessageRest {
      * */
     @GetMapping("/Tenants/{tenantId}/Groups/{groupId}/Messages")
     public ResVo<?> findGroupMessages(@PathVariable("tenantId") Long tenantId, @PathVariable("groupId") String groupId, FindGroupMessagesReq req) {
+        Session session = Session.currentSession();
+        session.verifyTenantIdAndThrowException(tenantId);
+        if(session.isTenant()) {
+            accessValidator.verifyGroupAndThrowException(tenantId, groupId);
+        }else if(session.isAccount()) {
+            accessValidator.verifyGroupMemberAndThrowException(tenantId, groupId, ((AccountSession) session).findAccount(tenantId));
+        }
+
         if(req.getPageSize() > 1000) {
             return ResVo.error("pageSize must be less than 1000");
         }

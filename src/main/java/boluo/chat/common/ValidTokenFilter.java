@@ -1,7 +1,11 @@
 package boluo.chat.common;
 
 import boluo.chat.config.ChatProperties;
+import boluo.chat.domain.Manager;
+import boluo.chat.mapper.ManagerMapper;
+import cn.hutool.core.codec.Base64;
 import cn.hutool.core.util.StrUtil;
+import cn.hutool.crypto.digest.BCrypt;
 import cn.hutool.json.JSONObject;
 import cn.hutool.json.JSONUtil;
 import cn.hutool.jwt.JWTPayload;
@@ -21,6 +25,7 @@ import org.springframework.util.AntPathMatcher;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
+import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 
 @Slf4j
@@ -32,6 +37,8 @@ public class ValidTokenFilter extends OncePerRequestFilter {
     private AntPathMatcher matcher = new AntPathMatcher();
     @Resource
     private ChatProperties chatProperties;
+    @Resource
+    private ManagerMapper managerMapper;
 
     @Override
     protected void doFilterInternal(HttpServletRequest req, HttpServletResponse res, FilterChain chain) throws ServletException, IOException {
@@ -39,12 +46,23 @@ public class ValidTokenFilter extends OncePerRequestFilter {
             //ignore valid
             chain.doFilter(req, res);
         }else {
+            boolean isBasic = false;
             String token = req.getHeader("Authorization");
             if(StrUtil.isBlank(token)) {
                 token = req.getParameter("Authorization");
+            }else {
+                token = token.trim();
+                if(token.startsWith("Basic") && token.length() > 6) {
+                    isBasic = true;
+                    token = token.substring(6);
+                }else if(token.startsWith("Bearer") && token.length() > 7){
+                    token = token.substring(7);
+                }else {//不支持的鉴权类型，赋值empty
+                    token = StrUtil.EMPTY;
+                }
             }
             try {
-                if(StrUtil.isNotBlank(token) && validToken(token)) {
+                if(StrUtil.isNotBlank(token) && validToken(token.trim(), isBasic)) {
                     chain.doFilter(req, res);
                 }else {
                     res.setContentType(MediaType.APPLICATION_JSON_UTF8_VALUE);
@@ -71,30 +89,47 @@ public class ValidTokenFilter extends OncePerRequestFilter {
         });
     }
 
-    private boolean validToken(String token) {
+    private boolean validToken(String token, boolean isBasic) {
         try {
-            token = token.substring(6).trim();
-            JWTPayload jwtPayload = JWTUtil.parseToken(token).getPayload();
-            JSONObject payload = jwtPayload.getClaimsJson();
-            SessionRoleEnum role = SessionRoleEnum.valueOf(payload.getStr("role"));
-            Session session;
-            if(role == SessionRoleEnum.Manager) {
-                session = null;
-            }else if(role == SessionRoleEnum.Tenant) {
-                Long tenantId = payload.getLong("tenantId");
-                RBucket<TenantSession> bucket = redissonClient.getBucket(RedisKeyTool.tenantTokenRedisKey(tenantId));
-                session = bucket.get();
-            }else if(role == SessionRoleEnum.Account) {
-                Long tenantId = payload.getLong("tenantId");
-                String account = payload.getStr("account");
-                RBucket<AccountSession> bucket = redissonClient.getBucket(RedisKeyTool.accountTokenRedisKey(tenantId, account));
-                session = bucket.get();
+            if(isBasic) {
+                String[] arr = Base64.decodeStr(token, Charset.defaultCharset()).split(":");
+                if(arr.length != 2) {
+                    return false;
+                }
+                String username = arr[0].trim();
+                String password = arr[1].trim();
+                Manager manager = managerMapper.selectByUsername(username);
+                if(manager == null || manager.getState() == 0 || !BCrypt.checkpw(password, manager.getPassword())) {
+                    return false;
+                }
+                ManagerSession session = new ManagerSession();
+                session.setManagerId(manager.getId());
+                session.setRole(SessionRoleEnum.Manager);
+                session.setSignSecret(chatProperties.getManageSignSecret());
+                Session.saveSession(session);
             }else {
-                return false;
+                JWTPayload jwtPayload = JWTUtil.parseToken(token).getPayload();
+                JSONObject payload = jwtPayload.getClaimsJson();
+                SessionRoleEnum role = SessionRoleEnum.valueOf(payload.getStr("role"));
+                Session session;
+                if(role == SessionRoleEnum.Manager) {
+                    session = null;
+                }else if(role == SessionRoleEnum.Tenant) {
+                    Long tenantId = payload.getLong("tenantId");
+                    RBucket<TenantSession> bucket = redissonClient.getBucket(RedisKeyTool.tenantTokenRedisKey(tenantId));
+                    session = bucket.get();
+                }else if(role == SessionRoleEnum.Account) {
+                    Long tenantId = payload.getLong("tenantId");
+                    String account = payload.getStr("account");
+                    RBucket<AccountSession> bucket = redissonClient.getBucket(RedisKeyTool.accountTokenRedisKey(tenantId, account));
+                    session = bucket.get();
+                }else {
+                    return false;
+                }
+                if(session == null) return false;
+                if(!JWTUtil.verify(token, session.getSignSecret().getBytes(StandardCharsets.UTF_8))) return false;
+                Session.saveSession(session);
             }
-            if(session == null) return false;
-            if(!JWTUtil.verify(token, session.getSignSecret().getBytes(StandardCharsets.UTF_8))) return false;
-            Session.saveSession(session);
             return true;
         }catch (Throwable e) {
             log.error("valid token fail", e);
