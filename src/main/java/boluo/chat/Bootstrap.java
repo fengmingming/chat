@@ -1,7 +1,8 @@
 package boluo.chat;
 
-import boluo.chat.exception.DefaultExceptionResolver;
+import boluo.chat.common.CorsFilter;
 import boluo.chat.common.ValidTokenFilter;
+import boluo.chat.exception.DefaultExceptionResolver;
 import org.mybatis.spring.annotation.MapperScan;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
@@ -22,6 +23,11 @@ public class Bootstrap implements WebMvcConfigurer {
     @Bean
     public ValidTokenFilter validTokenFilter() {
         return new ValidTokenFilter();
+    }
+
+    @Bean
+    public CorsFilter corsFilter() {
+        return new CorsFilter();
     }
 
     @Override
