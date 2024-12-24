@@ -31,6 +31,8 @@ public class Account {
     private String password;
     @TableField(value = "nick_name")
     private String nickName;
+    @TableField(value = "first_letter")
+    private Character firstLetter;
     @TableField(value = "profile_picture")
     private String profilePicture;
     @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")

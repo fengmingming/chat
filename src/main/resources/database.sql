@@ -4,6 +4,7 @@ CREATE TABLE chat.`account` (
   `account` VARCHAR(100)  not null comment '账号',
   `password` VARCHAR(20) null comment '密码',
   `nick_name` VARCHAR(100) null comment '昵称',
+  `first_letter` CHAR(1) null comment '首字母',
   `profile_picture` VARCHAR(255) null comment '头像',
   `create_time` DATETIME not null comment '创建时间',
   `update_time` DATETIME null comment '修改时间',

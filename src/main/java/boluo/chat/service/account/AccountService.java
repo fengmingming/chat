@@ -7,8 +7,10 @@ import boluo.chat.mapper.FriendApplyFormMapper;
 import boluo.chat.mapper.RelationshipMapper;
 import boluo.chat.message.ControlMessage;
 import boluo.chat.service.message.MessageService;
+import cn.hutool.core.util.CharUtil;
 import cn.hutool.core.util.StrUtil;
 import cn.hutool.crypto.digest.BCrypt;
+import cn.hutool.extra.pinyin.PinyinUtil;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import jakarta.annotation.Resource;
 import jakarta.validation.Valid;
@@ -47,6 +49,16 @@ public class AccountService {
             account.setPassword(BCrypt.hashpw(command.getPassword(), BCrypt.gensalt()));
         }
         account.setNickName(command.getNickName());
+        if(StrUtil.isNotBlank(command.getNickName())) {
+            char firstLetter = PinyinUtil.getFirstLetter(command.getNickName().charAt(0));
+            if(CharUtil.isLetter(firstLetter)) {
+                account.setFirstLetter(firstLetter);
+            }else {
+                account.setFirstLetter('#');
+            }
+        }else {
+            account.setFirstLetter('#');
+        }
         account.setProfilePicture(command.getProfilePicture());
         account.setCreateTime(LocalDateTime.now());
         account.setUpdateTime(LocalDateTime.now());

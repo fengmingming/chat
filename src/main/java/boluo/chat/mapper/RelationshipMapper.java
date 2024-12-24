@@ -1,7 +1,7 @@
 package boluo.chat.mapper;
 
 import boluo.chat.domain.Relationship;
-import com.baomidou.mybatisplus.core.mapper.BaseMapper;
+import com.github.yulichang.base.MPJBaseMapper;
 
-public interface RelationshipMapper extends BaseMapper<Relationship> {
+public interface RelationshipMapper extends MPJBaseMapper<Relationship> {
 }

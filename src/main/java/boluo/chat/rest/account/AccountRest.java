@@ -7,8 +7,10 @@ import boluo.chat.common.Session;
 import boluo.chat.domain.Account;
 import boluo.chat.domain.FriendApplyForm;
 import boluo.chat.domain.FriendApplyFormStatusEnum;
+import boluo.chat.domain.Relationship;
 import boluo.chat.mapper.AccountMapper;
 import boluo.chat.mapper.FriendApplyFormMapper;
+import boluo.chat.mapper.RelationshipMapper;
 import boluo.chat.service.account.AccountService;
 import boluo.chat.service.account.ApplyToAddFriendCommand;
 import boluo.chat.service.account.UpdateFriendApplyFormStatusCommand;
@@ -16,6 +18,7 @@ import cn.hutool.core.collection.CollectionUtil;
 import cn.hutool.core.util.StrUtil;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.github.yulichang.wrapper.MPJLambdaWrapper;
 import jakarta.annotation.Resource;
 import jakarta.validation.Valid;
 import lombok.Setter;
@@ -39,6 +42,8 @@ public class AccountRest {
     private FriendApplyFormMapper friendApplyFormMapper;
     @Resource
     private AccessValidator accessValidator;
+    @Resource
+    private RelationshipMapper relationshipMapper;
 
     /**
      *  创建账户
@@ -182,6 +187,25 @@ public class AccountRest {
         session.verifyTenantIdAndThrowException(tenantId).verifyAccountAndThrowException(account);
         accountService.deleteFriend(tenantId, account, req);
         return ResVo.success();
+    }
+
+    /**
+     * 我的好友
+     * */
+    @GetMapping("/Tenants/{tenantId}/Accounts/{account}/Friends")
+    public ResVo<?> findFriends(@PathVariable("tenantId") Long tenantId, @PathVariable("account") String account) {
+        Session session = Session.currentSession();
+        session.verifyTenantIdAndThrowException(tenantId);
+        session.verifyAccountAndThrowException(account);
+        Account accountEntity = accountMapper.selectByAccount(tenantId, account);
+        MPJLambdaWrapper<Relationship> queryWrapper = new MPJLambdaWrapper<>();
+        queryWrapper.selectAll(Account.class);
+        queryWrapper.innerJoin(Account.class, Account::getId, Relationship::getFriendId);
+        queryWrapper.eq(Relationship::getTenantId, tenantId);
+        queryWrapper.eq(Relationship::getAccountId, accountEntity.getId());
+        queryWrapper.eq(Relationship::getDeleted, 0L);
+        queryWrapper.orderByAsc(Account::getFirstLetter);
+        return ResVo.success(relationshipMapper.selectJoinList(Account.class, queryWrapper));
     }
 
 
