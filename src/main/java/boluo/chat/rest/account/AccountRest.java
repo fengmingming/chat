@@ -1,9 +1,6 @@
 package boluo.chat.rest.account;
 
-import boluo.chat.common.AccessValidator;
-import boluo.chat.common.PageVo;
-import boluo.chat.common.ResVo;
-import boluo.chat.common.Session;
+import boluo.chat.common.*;
 import boluo.chat.domain.Account;
 import boluo.chat.domain.FriendApplyForm;
 import boluo.chat.domain.FriendApplyFormStatusEnum;
@@ -91,7 +88,13 @@ public class AccountRest {
      * */
     @GetMapping("/Tenants/{tenantId}/Accounts/{account}")
     public ResVo<?> findAccounts(@PathVariable("tenantId") Long tenantId, @PathVariable("account") String account) {
-        Session.currentSession().verifyTenantIdAndThrowException(tenantId).verifyAccountAndThrowException(account);
+        Session session = Session.currentSession();
+        session.verifyTenantIdAndThrowException(tenantId);
+        if(session instanceof AccountSession as) {
+            if(!accessValidator.verifyFriend(tenantId, as.findAccount(tenantId), account)) {
+                return ResVo.error(403);
+            }
+        }
         return ResVo.success(accountMapper.selectByAccount(tenantId, account));
     }
 
@@ -106,7 +109,6 @@ public class AccountRest {
         }
         session.verifyTenantIdAndThrowException(tenantId).verifyAccountAndThrowException(account);
         accessValidator.verifyAccountAndThrowException(tenantId, req.getFriendAccount());
-
         accountService.addFriend(tenantId, account, req);
         return ResVo.success();
     }

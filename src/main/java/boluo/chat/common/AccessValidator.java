@@ -7,6 +7,7 @@ import boluo.chat.domain.GroupMemberRoleEnum;
 import boluo.chat.mapper.AccountMapper;
 import boluo.chat.mapper.GroupMapper;
 import boluo.chat.mapper.GroupMemberMapper;
+import boluo.chat.mapper.RelationshipMapper;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import jakarta.annotation.Resource;
 import lombok.Setter;
@@ -27,6 +28,8 @@ public class AccessValidator {
     private GroupMemberMapper groupMemberMapper;
     @Resource
     private AccountMapper accountMapper;
+    @Resource
+    private RelationshipMapper relationshipMapper;
 
     public boolean verifyGroup(Long tenantId, String groupId) {
         Objects.requireNonNull(tenantId, "tenantId is null");
@@ -94,6 +97,12 @@ public class AccessValidator {
         if(!verifyGroupMember(tenantId, groupId, account, roleEnum)) {
             throw new CodedException(403, "Forbidden");
         }
+    }
+
+    public boolean verifyFriend(Long tenantId, String account, String friendAccount) {
+        Account accountEntity = accountMapper.selectByAccount(tenantId, account);
+        Account friendEntity = accountMapper.selectByAccount(tenantId, friendAccount);
+        return relationshipMapper.isFriend(tenantId, accountEntity.getId(), friendEntity.getId());
     }
 
 }
