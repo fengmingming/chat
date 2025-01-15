@@ -1,6 +1,5 @@
 package boluo.chat.message;
 
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonSubTypes;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import jakarta.validation.constraints.NotBlank;
@@ -22,7 +21,6 @@ import lombok.Setter;
         @JsonSubTypes.Type(value = CustomMessage.class, name = "custom"),//自定义
         @JsonSubTypes.Type(value = RelayMessage.class, name = "relay")//转发消息
 })
-@JsonIgnoreProperties(ignoreUnknown = true, value = {"msgType"})
 public abstract class Message {
 
     private String msgId;
@@ -45,7 +43,7 @@ public abstract class Message {
         return null;
     }
 
-    public String findMsgType() {
+    public String getMsgType() {
         if(this instanceof StringMessage) {
             return "text";
         }else if(this instanceof ImageMessage) {

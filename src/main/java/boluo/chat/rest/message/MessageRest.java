@@ -8,6 +8,7 @@ import boluo.chat.domain.MessageEntity;
 import boluo.chat.mapper.MessageMapper;
 import boluo.chat.message.Message;
 import boluo.chat.service.message.MessageService;
+import cn.hutool.core.collection.CollectionUtil;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.annotation.Resource;
@@ -17,6 +18,7 @@ import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
+import java.util.Comparator;
 import java.util.List;
 
 @Setter
@@ -50,28 +52,52 @@ public class MessageRest {
     @GetMapping("/Tenants/{tenantId}/Accounts/{account}/Messages")
     public ResVo<?> findMessages(@PathVariable("tenantId") Long tenantId, @PathVariable("account") String account, FindMessagesReq req) {
         Session.currentSession().verifyTenantIdAndThrowException(tenantId).verifyAccountAndThrowException(account);
-        if(req.getPageSize() > 1000) {
-            return ResVo.error("pageSize must be less than 1000");
-        }
+        accessValidator.verifyFriend(tenantId, account, req.getAccount());
         if(req.getStartTime() == null) {
             req.setStartTime(LocalDateTime.now().plusDays(-7));
         }
         if(req.getEndTime() == null) {
             req.setEndTime(LocalDateTime.now());
         }
+        //发我的
         LambdaQueryWrapper<MessageEntity> queryWrapper = new LambdaQueryWrapper<>();
         queryWrapper.eq(MessageEntity::getTenantId, tenantId);
         queryWrapper.eq(MessageEntity::getTo, account);
+        queryWrapper.eq(MessageEntity::getFrom, req.getAccount());
         queryWrapper.gt(req.getMaxMsgId() != null, MessageEntity::getMsgId, req.getMaxMsgId());
-        queryWrapper.between(MessageEntity::getTimestamp, req.getStartTime().toEpochSecond(ZoneOffset.ofHours(8)), req.getEndTime().toEpochSecond(ZoneOffset.ofHours(8)));
-        List<Message> messages = messageMapper.selectList(queryWrapper).stream().map(it -> {
+        if(req.getStartTime() != null) {
+            queryWrapper.ge(MessageEntity::getTimestamp, req.getStartTime().toEpochSecond(ZoneOffset.ofHours(8)));
+        }
+        if(req.getEndTime() != null) {
+            queryWrapper.lt(MessageEntity::getTimestamp, req.getEndTime().toEpochSecond(ZoneOffset.ofHours(8)));
+        }
+        List<Message> toMessages = messageMapper.selectList(queryWrapper).stream().map(it -> {
             try {
                 return objectMapper.readValue(it.getMessage(), Message.class);
             } catch (Exception e) {
                 throw new RuntimeException(e);
             }
         }).toList();
-        return ResVo.success(messages);
+        //我发的
+        queryWrapper = new LambdaQueryWrapper<>();
+        queryWrapper.eq(MessageEntity::getTenantId, tenantId);
+        queryWrapper.eq(MessageEntity::getFrom, account);
+        queryWrapper.eq(MessageEntity::getTo, req.getAccount());
+        queryWrapper.gt(req.getMaxMsgId() != null, MessageEntity::getMsgId, req.getMaxMsgId());
+        if(req.getStartTime() != null) {
+            queryWrapper.ge(MessageEntity::getTimestamp, req.getStartTime().toEpochSecond(ZoneOffset.ofHours(8)));
+        }
+        if(req.getEndTime() != null) {
+            queryWrapper.lt(MessageEntity::getTimestamp, req.getEndTime().toEpochSecond(ZoneOffset.ofHours(8)));
+        }
+        List<Message> fromMessages = messageMapper.selectList(queryWrapper).stream().map(it -> {
+            try {
+                return objectMapper.readValue(it.getMessage(), Message.class);
+            } catch (Exception e) {
+                throw new RuntimeException(e);
+            }
+        }).toList();
+        return ResVo.success(CollectionUtil.unionAll(toMessages, fromMessages).stream().sorted(Comparator.comparing(Message::getMsgId)).toList());
     }
 
     /**
@@ -85,10 +111,6 @@ public class MessageRest {
             accessValidator.verifyGroupAndThrowException(tenantId, groupId);
         }else if(session.isAccount()) {
             accessValidator.verifyGroupMemberAndThrowException(tenantId, groupId, ((AccountSession) session).findAccount(tenantId));
-        }
-
-        if(req.getPageSize() > 1000) {
-            return ResVo.error("pageSize must be less than 1000");
         }
         if(req.getStartTime() == null) {
             req.setStartTime(LocalDateTime.now().plusDays(-7));

@@ -38,7 +38,7 @@ public class MessageService {
         me.setTenantId(Long.parseLong(message.getTenantId()));
         me.setFrom(message.getFrom());
         me.setTo(message.getTo());
-        me.setMsgType(message.findMsgType());
+        me.setMsgType(message.getMsgType());
         try {
             me.setMessage(objectMapper.writeValueAsString(message));
         } catch (JsonProcessingException e) {

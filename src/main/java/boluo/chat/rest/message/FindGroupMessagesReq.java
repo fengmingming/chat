@@ -1,6 +1,5 @@
 package boluo.chat.rest.message;
 
-import boluo.chat.common.Paging;
 import com.fasterxml.jackson.annotation.JsonFormat;
 import lombok.Getter;
 import lombok.Setter;
@@ -9,7 +8,7 @@ import java.time.LocalDateTime;
 
 @Setter
 @Getter
-public class FindGroupMessagesReq extends Paging {
+public class FindGroupMessagesReq {
 
     private Long maxMsgId;
     @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
