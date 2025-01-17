@@ -15,4 +15,9 @@ public class RelayMessage extends Message {
     @Size(min = 1)
     private List<Message> relayMessages;
 
+    @Override
+    public String getMsgType() {
+        return "relay";
+    }
+
 }

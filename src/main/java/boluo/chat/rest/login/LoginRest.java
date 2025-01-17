@@ -26,6 +26,7 @@ import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.*;
 
 import java.nio.charset.StandardCharsets;
+import java.util.Objects;
 
 @Slf4j
 @RestController
@@ -81,8 +82,11 @@ public class LoginRest {
     }
 
     @GetMapping("/validToken")
-    public void validToken(@RequestParam("tenantId") Long tenantId, @RequestParam("account") String account, @RequestParam("token") String token, HttpServletResponse res) {
+    public void validToken(@RequestParam(value = "tenantId", required = false) Long tenantId, @RequestParam(value = "account", required = false) String account, @RequestParam(value = "token", required = false) String token, HttpServletResponse res) {
         try {
+            Objects.requireNonNull(tenantId, "tenantId is null");
+            Objects.requireNonNull(account, "account is null");
+            Objects.requireNonNull(token, "token is null");
             JWTPayload jwtPayload = JWTUtil.parseToken(token).getPayload();
             JSONObject payload = jwtPayload.getClaimsJson();
             SessionRoleEnum role = SessionRoleEnum.valueOf(payload.getStr("role"));

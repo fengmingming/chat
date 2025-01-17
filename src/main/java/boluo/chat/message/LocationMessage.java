@@ -14,4 +14,9 @@ public class LocationMessage extends Message {
     private String longitude;
     private String desc;
 
+    @Override
+    public String getMsgType() {
+        return "location";
+    }
+
 }

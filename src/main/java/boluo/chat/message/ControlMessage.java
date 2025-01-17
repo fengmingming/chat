@@ -25,4 +25,9 @@ public class ControlMessage extends Message {
     public static final String REVIEW_FRIEND_REQUEST_NOTIFICATION = "reviewFriendRequestNotification";
 
 
+    @Override
+    public String getMsgType() {
+        return "control";
+    }
+
 }

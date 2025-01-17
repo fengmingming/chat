@@ -20,6 +20,11 @@ public class ImageMessage extends Message {
     @Valid
     private Image originImage;
 
+    @Override
+    public String getMsgType() {
+        return "image";
+    }
+
     @Setter
     @Getter
     public static class Image {

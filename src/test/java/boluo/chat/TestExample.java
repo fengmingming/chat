@@ -4,6 +4,7 @@ import boluo.chat.common.ResVo;
 import boluo.chat.message.Message;
 import boluo.chat.message.StringMessage;
 import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.Test;
@@ -25,8 +26,11 @@ public class TestExample {
         om.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
         StringMessage message = new StringMessage();
         message.setContent("hello world");
-        String json = om.writeValueAsString(ResVo.success(om.convertValue(message, HashMap.class)));
+        String json = om.writeValueAsString(ResVo.success(message));
         System.out.println(json);
+        ResVo<Message> res = om.readValue(json, new TypeReference<ResVo<Message>>() {
+        });
+        System.out.println(res.getData().getClass());
     }
 
 }

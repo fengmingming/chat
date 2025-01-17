@@ -19,7 +19,7 @@ spring:
 
 boluo:
   chat:
-    im-address: 127.0.0.1:40486
+    im-address: 127.0.0.1:18081
     groupKeyTemplate: boluo:chat:tenant:{tenantId}:group:{groupId}:members
     ignoreUrls:
       - POST:/Tenants

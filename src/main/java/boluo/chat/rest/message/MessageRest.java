@@ -71,6 +71,8 @@ public class MessageRest {
         if(req.getEndTime() != null) {
             queryWrapper.lt(MessageEntity::getTimestamp, req.getEndTime().toEpochSecond(ZoneOffset.ofHours(8)));
         }
+        queryWrapper.orderByAsc(MessageEntity::getMsgId);
+        queryWrapper.last("LIMIT 1000");
         List<Message> toMessages = messageMapper.selectList(queryWrapper).stream().map(it -> {
             try {
                 return objectMapper.readValue(it.getMessage(), Message.class);
@@ -90,6 +92,8 @@ public class MessageRest {
         if(req.getEndTime() != null) {
             queryWrapper.lt(MessageEntity::getTimestamp, req.getEndTime().toEpochSecond(ZoneOffset.ofHours(8)));
         }
+        queryWrapper.orderByAsc(MessageEntity::getMsgId);
+        queryWrapper.last("LIMIT 1000");
         List<Message> fromMessages = messageMapper.selectList(queryWrapper).stream().map(it -> {
             try {
                 return objectMapper.readValue(it.getMessage(), Message.class);
@@ -122,7 +126,14 @@ public class MessageRest {
         queryWrapper.eq(MessageEntity::getTenantId, tenantId);
         queryWrapper.eq(MessageEntity::getTo, "GROUP:" + groupId);
         queryWrapper.gt(req.getMaxMsgId() != null, MessageEntity::getMsgId, req.getMaxMsgId());
-        queryWrapper.between(MessageEntity::getTimestamp, req.getStartTime().toEpochSecond(ZoneOffset.ofHours(8)), req.getEndTime().toEpochSecond(ZoneOffset.ofHours(8)));
+        if(req.getStartTime() != null) {
+            queryWrapper.ge(MessageEntity::getTimestamp, req.getStartTime().toEpochSecond(ZoneOffset.ofHours(8)));
+        }
+        if(req.getEndTime() != null) {
+            queryWrapper.lt(MessageEntity::getTimestamp, req.getEndTime().toEpochSecond(ZoneOffset.ofHours(8)));
+        }
+        queryWrapper.orderByAsc(MessageEntity::getMsgId);
+        queryWrapper.last("LIMIT 1000");
         List<Message> messages = messageMapper.selectList(queryWrapper).stream().map(it -> {
             try {
                 return objectMapper.readValue(it.getMessage(), Message.class);

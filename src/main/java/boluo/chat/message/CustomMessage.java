@@ -11,4 +11,9 @@ public class CustomMessage extends Message {
     @NotNull(message = "data is null")
     private Object data;
 
+    @Override
+    public String getMsgType() {
+        return "custom";
+    }
+
 }

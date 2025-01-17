@@ -19,7 +19,8 @@ import lombok.Setter;
         @JsonSubTypes.Type(value = SoundMessage.class, name = "sound"),//视频
         @JsonSubTypes.Type(value = ControlMessage.class, name = "control"),//控制
         @JsonSubTypes.Type(value = CustomMessage.class, name = "custom"),//自定义
-        @JsonSubTypes.Type(value = RelayMessage.class, name = "relay")//转发消息
+        @JsonSubTypes.Type(value = RelayMessage.class, name = "relay"),//转发消息
+        @JsonSubTypes.Type(value = ExceptionMessage.class, name = "exception")//异常消息
 })
 public abstract class Message {
 
@@ -43,30 +44,6 @@ public abstract class Message {
         return null;
     }
 
-    public String getMsgType() {
-        if(this instanceof StringMessage) {
-            return "text";
-        }else if(this instanceof ImageMessage) {
-            return "image";
-        }else if(this instanceof VideoMessage) {
-            return "video";
-        }else if(this instanceof FileMessage) {
-            return "file";
-        }else if(this instanceof FaceMessage) {
-            return "face";
-        }else if(this instanceof LocationMessage) {
-            return "location";
-        }else if(this instanceof SoundMessage) {
-            return "sound";
-        }else if(this instanceof ControlMessage) {
-            return "control";
-        }else if(this instanceof CustomMessage) {
-            return "custom";
-        }else if(this instanceof RelayMessage) {
-            return "relay";
-        }else {
-            throw new IllegalArgumentException("unregistered message:" + this.getClass().getSimpleName());
-        }
-    }
+    public abstract String getMsgType();
 
 }
