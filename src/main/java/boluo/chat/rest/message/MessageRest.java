@@ -66,10 +66,10 @@ public class MessageRest {
         queryWrapper.eq(MessageEntity::getFrom, req.getAccount());
         queryWrapper.gt(req.getMaxMsgId() != null, MessageEntity::getMsgId, req.getMaxMsgId());
         if(req.getStartTime() != null) {
-            queryWrapper.ge(MessageEntity::getTimestamp, req.getStartTime().toEpochSecond(ZoneOffset.ofHours(8)));
+            queryWrapper.ge(MessageEntity::getTimestamp, req.getStartTime().toEpochSecond(ZoneOffset.ofHours(8)) * 1000);
         }
         if(req.getEndTime() != null) {
-            queryWrapper.lt(MessageEntity::getTimestamp, req.getEndTime().toEpochSecond(ZoneOffset.ofHours(8)));
+            queryWrapper.lt(MessageEntity::getTimestamp, req.getEndTime().toEpochSecond(ZoneOffset.ofHours(8)) * 1000);
         }
         queryWrapper.orderByAsc(MessageEntity::getMsgId);
         queryWrapper.last("LIMIT 1000");
@@ -87,10 +87,10 @@ public class MessageRest {
         queryWrapper.eq(MessageEntity::getTo, req.getAccount());
         queryWrapper.gt(req.getMaxMsgId() != null, MessageEntity::getMsgId, req.getMaxMsgId());
         if(req.getStartTime() != null) {
-            queryWrapper.ge(MessageEntity::getTimestamp, req.getStartTime().toEpochSecond(ZoneOffset.ofHours(8)));
+            queryWrapper.ge(MessageEntity::getTimestamp, req.getStartTime().toEpochSecond(ZoneOffset.ofHours(8)) * 1000);
         }
         if(req.getEndTime() != null) {
-            queryWrapper.lt(MessageEntity::getTimestamp, req.getEndTime().toEpochSecond(ZoneOffset.ofHours(8)));
+            queryWrapper.lt(MessageEntity::getTimestamp, req.getEndTime().toEpochSecond(ZoneOffset.ofHours(8)) * 1000);
         }
         queryWrapper.orderByAsc(MessageEntity::getMsgId);
         queryWrapper.last("LIMIT 1000");
@@ -127,10 +127,10 @@ public class MessageRest {
         queryWrapper.eq(MessageEntity::getTo, "GROUP:" + groupId);
         queryWrapper.gt(req.getMaxMsgId() != null, MessageEntity::getMsgId, req.getMaxMsgId());
         if(req.getStartTime() != null) {
-            queryWrapper.ge(MessageEntity::getTimestamp, req.getStartTime().toEpochSecond(ZoneOffset.ofHours(8)));
+            queryWrapper.ge(MessageEntity::getTimestamp, req.getStartTime().toEpochSecond(ZoneOffset.ofHours(8)) * 1000);
         }
         if(req.getEndTime() != null) {
-            queryWrapper.lt(MessageEntity::getTimestamp, req.getEndTime().toEpochSecond(ZoneOffset.ofHours(8)));
+            queryWrapper.lt(MessageEntity::getTimestamp, req.getEndTime().toEpochSecond(ZoneOffset.ofHours(8)) * 1000);
         }
         queryWrapper.orderByAsc(MessageEntity::getMsgId);
         queryWrapper.last("LIMIT 1000");

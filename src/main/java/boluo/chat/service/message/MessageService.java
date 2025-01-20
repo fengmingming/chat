@@ -39,11 +39,6 @@ public class MessageService {
         me.setFrom(message.getFrom());
         me.setTo(message.getTo());
         me.setMsgType(message.getMsgType());
-        try {
-            me.setMessage(objectMapper.writeValueAsString(message));
-        } catch (JsonProcessingException e) {
-            throw new RuntimeException(e);
-        }
         if(message.getTimestamp() == null) {
             me.setTimestamp(System.currentTimeMillis());
         }else {
@@ -51,6 +46,12 @@ public class MessageService {
         }
         messageMapper.insert(me);
         message.setMsgId(me.getMsgId().toString());
+        try {
+            me.setMessage(objectMapper.writeValueAsString(message));
+        } catch (JsonProcessingException e) {
+            throw new RuntimeException(e);
+        }
+        messageMapper.updateById(me);
         return message;
     }
 

@@ -87,6 +87,7 @@ public class AccountService {
         Account fromAccount = accountMapper.selectByAccount(tenantId, account);
         Account friendAccount = accountMapper.selectByAccount(tenantId, command.getFriendAccount());
         doAddFriend(tenantId, fromAccount.getId(), friendAccount.getId());
+        doAddFriend(tenantId, friendAccount.getId(), fromAccount.getId());
     }
 
     protected void doAddFriend(Long tenantId, Long accountId, Long friendAccountId) {
@@ -155,6 +156,7 @@ public class AccountService {
             friendApplyFormMapper.updateById(form);
             if(command.getStatus() == FriendApplyFormStatusEnum.Agreed) {
                 doAddFriend(form.getTenantId(), form.getAccountId(), form.getApplyAccountId());
+                doAddFriend(form.getTenantId(), form.getApplyAccountId(), form.getAccountId());
                 Account toAccount = accountMapper.selectById(form.getApplyAccountId());
                 ControlMessage message = new ControlMessage();
                 message.setTenantId(command.getTenantId().toString());
