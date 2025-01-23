@@ -201,6 +201,12 @@ public class GroupRest {
         return ResVo.success();
     }
 
+    @GetMapping("/Tenants/{tenantId}/Groups/{groupId}")
+    public ResVo<?> findGroup(@PathVariable("tenantId") Long tenantId, @PathVariable("groupId") String groupId) {
+        Group group = groupMapper.selectByGroupId(tenantId, groupId);
+        return ResVo.success(group);
+    }
+
     /**
      * 群成员
      * */
